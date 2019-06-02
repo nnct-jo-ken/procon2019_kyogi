@@ -4,19 +4,20 @@ Agent::Agent()
 {
 	pos = Vector2(0, 0);
 	target_pos = Vector2(0, 0);
-	act_state = 0;
+	act_type = 0;
 	team = 0;
 }
 
-Agent::Agent(Vector2 _pos, int _team)
+Agent::Agent(Vector2 _pos, int _team, int _ID)
 {
 	pos = _pos;
 	target_pos = Vector2(0, 0);
-	act_state = 0;
+	act_type = 0;
 	if (_team != 1 && _team != 2) {
 		throw std::invalid_argument("Agent constructor exception.");
 	}
 	team = _team;
+	ID = _ID;
 }
 
 void Agent::setPos(Vector2 _pos) {
@@ -27,7 +28,7 @@ void Agent::setPos(Vector2 _pos) {
 	pos = _pos;
 }
 
-void Agent::setTarget(Vector2 _step) {
+void Agent::setDeltaMove(Vector2 _step) {
 	if (abs(_step.x) > 1 || abs(_step.y) > 1) {
 		throw std::invalid_argument("Agent::setTarget() exception.");
 	}
@@ -35,9 +36,9 @@ void Agent::setTarget(Vector2 _step) {
 	target_pos = pos + _step;
 }
 
-void Agent::setActState(int _state) {
+void Agent::setActType(int _state) {
 	if (_state == 0 || _state == 1 || _state == 2) {
-		act_state = _state;
+		act_type = _state;
 	}
 	else {
 		throw "Agent::setActState() error. Value must be 0 or 1 or 2.";
@@ -59,15 +60,20 @@ Vector2 Agent::getTarget() {
 	return target_pos;
 }
 
-int Agent::getActState() {
-	return act_state;
+int Agent::getActType() {
+	return act_type;
 }
 
 int Agent::getTeam() {
 	return team;
 }
 
+int Agent::getID()
+{
+	return ID;
+}
+
 void Agent::resetAct() {
 	target_pos = pos;
-	act_state = 0;
+	act_type = 0;
 }

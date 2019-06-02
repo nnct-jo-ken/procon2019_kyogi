@@ -105,6 +105,15 @@
     <ClCompile Include="Buffers.cpp">
       <Filter>Source Files\Connection</Filter>
     </ClCompile>
+    <ClCompile Include="json11\json11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Source Files\Connection</Filter>
+    </ClCompile>
+    <ClCompile Include="TCP_Server.cpp">
+      <Filter>Source Files\Connection</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="App\icon.ico">
@@ -216,6 +225,9 @@
     <None Include="App\nlp\japanese\jumanpp\README.md">
       <Filter>Resource Files\nlp\japanese\jumanpp</Filter>
     </None>
+    <None Include="resource\field.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="App\engine\font\noto\LICENSE_OFL.txt">
@@ -250,7 +262,16 @@
     <ClInclude Include="GUI_input.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="json11\json11.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Buffers.h">
+      <Filter>Header Files\Connection</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Header Files\Connection</Filter>
+    </ClInclude>
+    <ClInclude Include="TCP_Server.h">
       <Filter>Header Files\Connection</Filter>
     </ClInclude>
   </ItemGroup>

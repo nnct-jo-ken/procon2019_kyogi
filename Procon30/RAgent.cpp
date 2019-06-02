@@ -28,7 +28,7 @@ RAgent::RAgent(int _team, int _id, int _agent_index, Point _pos, const RInfo& _r
 	else {
 		color = _rInfo.team2_color;
 	}
-	id = _id + 1;
+	id = _id;
 	pos = _pos;
 	UI_pos = getUIPos(_rInfo);
 	circle = Circle(UI_pos, _rInfo.agent_radius);

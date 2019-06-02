@@ -22,13 +22,13 @@ void Renderer::init(BOARD_STATE board) {
 	font = Font(20);
 	initrInfo();
 	render_board = board;
-	for (int i = 0; i < board.agent_quentity * 2; i++) {
+	for (int i = 0; i < board.agent_qant * 2; i++) {
 		Vector2 pos = board.agents[i].getPos();
-		ragents.push_back(RAgent(board.agents[i].getTeam(), i % board.agent_quentity, i, Point(pos.x, pos.y), rInfo));
+		ragents.push_back(RAgent(board.agents[i].getTeam(), board.agents[i].getID(), i, Point(pos.x, pos.y), rInfo));
 	}
 
 	for (int i = 0; i < board.width * board.height; i++) {
-		Point pos(i % board.width, i / board.height);
+		Point pos(i % board.width, i / board.width);
 		tiles.push_back(RTile(board.tile_state[i], board.tile_score[i], pos, rInfo));
 	}
 	input.init(rInfo, board);
@@ -47,7 +47,7 @@ void Renderer::update(std::vector<Agent>& agents){
 	for (RAgent &a : ragents) {
 		a.draw(rInfo);
 		OPERATION_STATE ostate;
-		switch (agents[i].getActState())
+		switch (agents[i].getActType())
 		{
 		case 0:
 			ostate = NONE;

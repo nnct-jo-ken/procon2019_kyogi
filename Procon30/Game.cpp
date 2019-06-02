@@ -27,9 +27,9 @@ int Game::getNowTurn() {
 	return board.now_turn;
 }
 
-int Game::getAgentQuentity()
+int Game::getAgentQant()
 {
-	return board.agent_quentity;
+	return board.agent_qant;
 }
 
 std::vector<Agent>& Game::getAgentVector() {
@@ -37,58 +37,102 @@ std::vector<Agent>& Game::getAgentVector() {
 }
 
 void Game::init() {
-	// 本来はhttpでサーバーと通信して情報を得る
-	board.width = 6;
-	board.height = 6;
-	board.turn = 50;
-	board.now_turn = 1;
-	board.agent_quentity = 2;
+	// ./resource/field.jsonを読み込み、反映する
+	// ファイル読み込み
+	std::ifstream ifs("../resource/field.json");
+	if (ifs.fail()) {
+		exit(-1);
+	}
 
-	// エージェントの初期化
-	/*try {
-		for (int i = 0; i < board.agent_quentity * 2; i++) {
-			if (i < board.agent_quentity) {
-				board.agents.push_back(Agent(Vector2(i, 0), 1));
+	// なんかやばい方法
+	std::istreambuf_iterator<char> it(ifs);
+	std::istreambuf_iterator<char> last;
+	std::string str(it, last);
+	// 仮チームID
+	board.team_ID = 5;
+	parse_json(str);
+
+	board.game_score = countGameScore();
+}
+
+void Game::parse_json(std::string json_str)
+{
+	std::string err;
+	const json11::Json json = json11::Json::parse(json_str, err);
+	
+	board.width = json["width"].int_value();
+	board.height = json["height"].int_value();
+	board.turn = json["turn"].int_value();
+	board.now_turn = json["turn"].int_value();
+
+	// タイルポイント
+	for (auto& col : json["points"].array_items())
+	{
+		for (int i = 0; i < board.width; i++)
+		{
+			board.tile_score.push_back(col[i].int_value());
+		}
+	}
+
+	// タイルの状態
+	for (auto& col : json["tiled"].array_items())
+	{
+		for (int i = 0; i < board.width; i++)
+		{
+			int tile_coler = col[i].int_value();
+			if (tile_coler == 0)
+			{
+				board.tile_state.push_back(tile_coler);
+			} 
+			else if (tile_coler == board.team_ID)
+			{
+				board.tile_state.push_back(1);
 			}
-			else {
-				board.agents.push_back(Agent(Vector2(i, 0), 2));
+			else
+			{
+				board.tile_state.push_back(2);
 			}
 		}
 	}
-	catch (std::invalid_argument e) {
-		throw std::invalid_argument("game agent init exception.");
-	}*/
-	board.agents.push_back(Agent(Vector2(0, 0), 1));
-	board.agents.push_back(Agent(Vector2(5, 5), 1));
 
-	board.agents.push_back(Agent(Vector2(5, 0), 2));
-	board.agents.push_back(Agent(Vector2(0, 5), 2));
-
-	// タイルのスコアの設定
-	for (int y = 0; y < board.height; y++) {
-		for (int x = 0; x < board.width; x++) {
-		//	board.tile_score.push_back(y * board.width + x);
-			board.tile_score.push_back(-1);
+	// エージェント格納
+	for (int i = 0; i < 2; i++)
+	{
+		board.agent_qant = 0;
+		auto team_obj = json["teams"].array_items()[i];
+		for (auto& agent_obj : team_obj["agents"].array_items())
+		{
+			board.agent_qant++;
+			board.agents.push_back(
+				Agent(
+					Vector2(
+						agent_obj["x"].int_value() - 1,
+						agent_obj["y"].int_value() - 1
+					),
+					team_obj["teamID"].int_value() == board.team_ID ? 1 : 2,
+					agent_obj["agentID"].int_value()
+				)
+			);
 		}
 	}
 
-	// タイルのチーム情報の初期化
-	for (int y = 0; y < board.height; y++) {
-		for (int x = 0; x < board.width; x++) {
-			board.tile_state.push_back(0);
+	// 自分のチームがコンテナの前半に来るように入れ替え
+	if (board.team_ID != json["teams"].array_items()[0]["teamID"].int_value())
+	{
+		for (int i = 0; i < board.agent_qant; i++)
+		{
+			std::iter_swap(&board.agents[i], &board.agents[i + board.agent_qant]);
 		}
 	}
-
-	// エージェントの初期位置のタイルのチーム情報の設定
-	for (int i = 0; i < board.agent_quentity * 2; i++) {
-		setTileState(board.agents[i].getPos(), board.agents[i].getTeam());
-	}
-
-	board.game_score = getGameScore();
 }
 
 BOARD_STATE Game::getBoardState() {
 	return board;
+}
+
+GAME_SCORE Game::getGameScore()
+{
+	return board.game_score;
 }
 
 int Game::getWidth()
@@ -111,7 +155,7 @@ void Game::setAct(int team, int num, int act, Vector2 step) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	if (num < 0 || num <= board.agent_quentity) {
+	if (num < 0 || num <= board.agent_qant) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
@@ -123,9 +167,9 @@ void Game::setAct(int team, int num, int act, Vector2 step) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	Agent& tmp = board.agents[(team - 1) * board.agent_quentity + num];
-	tmp.setActState(act);
-	tmp.setTarget(tmp.getPos() + step);
+	Agent& tmp = board.agents[(team - 1) * board.agent_qant + num];
+	tmp.setActType(act);
+	tmp.setDeltaMove(tmp.getPos() + step);
 }
 
 void Game::setTileState(Vector2 pos, int _team) {
@@ -133,6 +177,26 @@ void Game::setTileState(Vector2 pos, int _team) {
 		throw std::invalid_argument("Game::setTileState() exception.");
 	}
 	board.tile_state[pos.y * board.width + pos.x] = _team;
+}
+
+void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
+{
+	mtx.lock();
+	while (!queue.empty()) 
+	{
+		ACT_STATE tmp = queue.front();
+		for (Agent& a : board.agents)
+		{
+			if (a.getID() == tmp.agent_id)
+			{
+				a.setDeltaMove(Vector2(tmp.dx, tmp.dy));
+				a.setActType(tmp.type);
+			}
+		}
+		queue.pop();
+	}
+
+	mtx.unlock();
 }
 
 bool Game::updateTurn() {
@@ -146,15 +210,15 @@ bool Game::updateTurn() {
 
 	// 移動先のタイルと自身の色を比較して移動か削除かを決める
 	for (Agent& a : board.agents) {
-		if (a.getActState() == 0) {
+		if (a.getActType() == 0) {
 			a.resetAct();
 		}
-		if (a.getActState() == 1) {
+		if (a.getActType() == 1) {
 			if (getTileState(a.getTarget()) != 0 && getTileState(a.getTarget()) != a.getTeam()) {
 				a.resetAct();
 			}
 		}
-		if (a.getActState() == 2) {
+		if (a.getActType() == 2) {
 			if (a.getTeam() == 0) {
 				a.resetAct();
 			}
@@ -173,8 +237,8 @@ bool Game::updateTurn() {
 	while (inCheck) {
 		// エージェントの行動の変化がなくなるまで調べる
 		inCheck = false;
-		for (int i = 0; i < board.agent_quentity * 2 - 1; i++) {
-			for (int i2 = i + 1; i2 < board.agent_quentity * 2; i2++) {
+		for (int i = 0; i < board.agent_qant * 2 - 1; i++) {
+			for (int i2 = i + 1; i2 < board.agent_qant * 2; i2++) {
 				Vector2 checkingPos1 = board.agents[i].getTarget();
 				Vector2 checkingPos2 = board.agents[i2].getTarget();
 				if (board.agents[i].getTarget() == board.agents[i2].getTarget()) {
@@ -183,14 +247,14 @@ bool Game::updateTurn() {
 					board.agents[i2].resetAct();
 					inCheck = true;
 				}
-				if (board.agents[i].getActState() == 2) {
+				if (board.agents[i].getActType() == 2) {
 					if (board.agents[i].getPos() == board.agents[i2].getTarget()) {
 						buttingTable[checkingPos2.y * board.width + checkingPos2.x] = true;
 						board.agents[i2].resetAct();
 						inCheck = true;
 					}
 				}
-				if (board.agents[i2].getActState() == 2) {
+				if (board.agents[i2].getActType() == 2) {
 					if (board.agents[i2].getPos() == board.agents[i].getTarget()) {
 						buttingTable[checkingPos1.y * board.width + checkingPos1.x] = true;
 						board.agents[i].resetAct();
@@ -198,16 +262,16 @@ bool Game::updateTurn() {
 					}
 				}
 
-				if (board.agents[i2].getActState() == 1) {
+				if (board.agents[i2].getActType() == 1) {
 
 				}
-				if (board.agents[i].getActState() != 0) {
+				if (board.agents[i].getActType() != 0) {
 					if (buttingTable[checkingPos1.y * board.width + checkingPos1.x]) {
 						board.agents[i].resetAct();
 					}
 				}
 
-				if (board.agents[i2].getActState() != 0) {
+				if (board.agents[i2].getActType() != 0) {
 					if (buttingTable[checkingPos2.y * board.width + checkingPos2.x]) {
 						board.agents[i2].resetAct();
 					}
@@ -218,7 +282,7 @@ bool Game::updateTurn() {
 
 	// 実際のデータを更新してリセットする
 	for (Agent& a : board.agents) {
-		if (a.getActState() == 2) {
+		if (a.getActType() == 2) {
 			board.tile_state[a.getTarget().y * board.width + a.getTarget().x] = 0;
 		} 
 		else {
@@ -228,7 +292,7 @@ bool Game::updateTurn() {
 		a.resetAct();
 	}
 
-	board.game_score = getGameScore();
+	board.game_score = countGameScore();
 
 	// 残りターン数を更新する
 	board.turn--;
@@ -284,7 +348,7 @@ void Game::areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, 
 	areaScoreRecursion(team, x, y - 1, table, tmp, reach_end);
 }
 
-GAME_SCORE Game::getGameScore()
+GAME_SCORE Game::countGameScore()
 {
 	GAME_SCORE score_tmp = {};
 	for (int y = 0; y < board.height; y++)  {

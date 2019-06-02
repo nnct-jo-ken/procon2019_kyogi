@@ -86,12 +86,12 @@ void GUI_input::clicked_selector(std::vector<Agent>& agents) {
 						int tmp = i;
 						if (i > 3) { tmp++; }
 						Vector2 point = Vector2(tmp % 3 - 1, tmp / 3 - 1);
-						agents[agent_index].setTarget(point);
+						agents[agent_index].setDeltaMove(point);
 						if (in_operation == MOVE) {
-							agents[agent_index].setActState(1);
+							agents[agent_index].setActType(1);
 						}
 						if (in_operation == REMOVE) {
-							agents[agent_index].setActState(2);
+							agents[agent_index].setActType(2);
 						}
 						in_operation = NONE;
 					}
