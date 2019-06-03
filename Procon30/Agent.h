@@ -4,12 +4,14 @@
 #include "Vector2.h"
 
 class Agent {
+
 private:
-	Vector2 pos;	// エージェントの位置
-	Vector2 target_pos; // 次のターンの移動先
-	int act_type;		// 行動の種類 0:動かない 1:移動 2:タイル除去
-	int team;		// チーム. 1 or 2
-	int ID;
+	Vector2		pos;	// エージェントの位置
+	Vector2		target_pos; // 次のターンの移動先
+	int			act_type;		// 行動の種類 0:動かない 1:移動 2:タイル除去
+	int			team;		// チーム. 1 or 2
+	int			ID;
+
 public:
 	Agent();
 	Agent(Vector2 _pos, int _team, int _ID);

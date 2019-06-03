@@ -9,8 +9,8 @@ public:
 	int x;
 	int y;
 
-	Vector2(int _x, int _y);
 	Vector2();
+	Vector2(int _x, int _y);
 	void set(int _x, int _y);
 	Vector2 operator + (const Vector2& vec);
 	Vector2 operator - (const Vector2& vec);

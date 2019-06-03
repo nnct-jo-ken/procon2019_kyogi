@@ -10,7 +10,7 @@ std::string Buffers::createBoardBuffer(BOARD_STATE board, int team)
 	buf += ',';
 	buf += std::to_string(board.turn);
 	buf += ',';
-	buf += std::to_string(board.agent_qant);
+	buf += std::to_string(board.agent_count);
 	buf += ',';
 
 	// タイルポイントとエリアポイントを書き込む
@@ -80,7 +80,7 @@ std::string Buffers::createBoardBuffer(BOARD_STATE board, int team)
 	// エージェントのIDと座標を書き込む
 	if (team == 1)
 	{
-		for (int i = 0; i < board.agent_qant * 2; i++)
+		for (int i = 0; i < board.agent_count * 2; i++)
 		{
 			buf += std::to_string(board.agents[i].getID());
 			buf += ',';
@@ -92,7 +92,7 @@ std::string Buffers::createBoardBuffer(BOARD_STATE board, int team)
 	}
 	if (team == 2)
 	{
-		for (int i = board.agent_qant; i < board.agent_qant * 2; i++)
+		for (int i = board.agent_count; i < board.agent_count * 2; i++)
 		{
 			buf += std::to_string(board.agents[i].getID());
 			buf += ',';
@@ -102,7 +102,7 @@ std::string Buffers::createBoardBuffer(BOARD_STATE board, int team)
 			buf += ',';
 		}
 
-		for (int i = 0; i < board.agent_qant; i++)
+		for (int i = 0; i < board.agent_count; i++)
 		{
 			buf += std::to_string(board.agents[i].getID());
 			buf += ',';

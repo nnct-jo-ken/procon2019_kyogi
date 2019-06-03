@@ -114,6 +114,9 @@
     <ClCompile Include="TCP_Server.cpp">
       <Filter>Source Files\Connection</Filter>
     </ClCompile>
+    <ClCompile Include="Sysloop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="App\icon.ico">
@@ -273,6 +276,9 @@
     </ClInclude>
     <ClInclude Include="TCP_Server.h">
       <Filter>Header Files\Connection</Filter>
+    </ClInclude>
+    <ClInclude Include="Sysloop.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

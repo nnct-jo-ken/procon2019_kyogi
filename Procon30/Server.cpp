@@ -93,6 +93,7 @@ void Server::wait_act(int index, std::queue<ACT_STATE>& queue, std::mutex& mtx)
 	if (n >= 1) {
 		std::string act_str(recv_buf);
 		set_action(act_str, queue, mtx);
+		server_state[index] = CONNECT;
 	}
 }
 

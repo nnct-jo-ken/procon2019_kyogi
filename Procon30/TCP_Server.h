@@ -3,13 +3,13 @@
 class TCP_Server
 {
 public:
-	WSADATA wsaData;
-	SOCKET sock0;
-	SOCKADDR_IN addr;
-	SOCKADDR_IN client;
-	int len;
-	SOCKET sock;
-	fd_set fds, readfds;
+	WSADATA			wsaData;
+	SOCKET			sock0;
+	SOCKADDR_IN		addr;
+	SOCKADDR_IN		client;
+	int				len;
+	SOCKET			sock;
+	fd_set			fds, readfds;
 
 	void init(u_short port);
 	void tcp_open();
