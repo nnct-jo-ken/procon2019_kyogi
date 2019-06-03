@@ -5,14 +5,16 @@
 #include "GUI_input.h"
 
 class Renderer {
+
 private:
-	BOARD_STATE render_board;
-	RInfo rInfo;
-	void initrInfo();
+	BOARD_STATE			render_board;
+	RInfo				rInfo;
 	std::vector<RAgent> ragents;
-	std::vector<RTile> tiles;
-	GUI_input input;
-	Font font;
+	std::vector<RTile>	tiles;
+	GUI_input			input;
+	Font				font;
+	void				initrInfo();
+
 public:
 	void init(BOARD_STATE board);
 	void update(std::vector<Agent>& agents);

@@ -3,14 +3,14 @@
 
 class RAgent {
 private:
-	Color color;
-	int id;
-	int agent_index;
-	Point pos;
-	OPERATION_STATE ostate;
-	Point target_pos;
-	Vec2 UI_pos;
-	Circle circle;
+	Color				color;
+	int					id;
+	int					agent_index;
+	Point				pos;
+	OPERATION_STATE		ostate;
+	Point				target_pos;
+	Vec2				UI_pos;
+	Circle				circle;
 
 	Vec2 getUIPos(const RInfo& _rInfo);
 	Vec2 getUIPos(const RInfo& _rInfo, Point pos);

@@ -3,11 +3,11 @@
 
 class RTile {
 private:
-	Color color;
-	int score;
-	Point pos;
-	Vec2 UI_pos;
-	RectF rect;
+	Color	color;
+	int		score;
+	Point	pos;
+	Vec2	UI_pos;
+	RectF	rect;
 
 	Vec2 getUIPos(const RInfo& _rInfo);
 public:
