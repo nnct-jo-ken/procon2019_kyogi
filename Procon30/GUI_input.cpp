@@ -74,6 +74,18 @@ void GUI_input::clicked_agent(std::vector<RAgent>& ragents, std::vector<RTile>& 
 	}
 }
 
+void GUI_input::clear()
+{
+	select_agent = Point();
+	agent_index = 0;
+	selector.clear();
+	is_enable.clear();
+	in_operation = NONE;
+	is_clicked_selector = false;
+	width = 0;
+	height = 0;
+}
+
 void GUI_input::clicked_selector(std::vector<Agent>& agents) {
 	if (in_operation != NONE) {
 		if (MouseL.down()) {

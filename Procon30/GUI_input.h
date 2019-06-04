@@ -19,6 +19,7 @@ private:
 
 public:
 	void init(RInfo& rInfo, BOARD_STATE& bState);
+	void clear();
 	void update(std::vector<RAgent>& ragents, std::vector<RTile>& tiles, std::vector<Agent>& agents);
 	
 };

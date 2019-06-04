@@ -38,7 +38,7 @@ void Server::accept(int index)
 	}
 }
 
-void Server::wait_cmd(BOARD_STATE board, int index)
+void Server::wait_cmd(BOARD_STATE board, int index, std::mutex& mtx, bool& restart)
 {
 	// クライアントからの要求を受け取る
 	// データの要求 : INFO
@@ -54,7 +54,8 @@ void Server::wait_cmd(BOARD_STATE board, int index)
 
 	// ノンブロッキングソケットだから毎回あれする
 	if (n >= 1) {
-		if (strcmp(recv_buf, "INFO") == 0)
+		std::string cmd(recv_buf);
+		if (cmd == "INFO")
 		{
 			std::string board_str = Buffers::createBoardBuffer(board, index + 1);
 			char board_buf[4096] = { 0 };
@@ -69,10 +70,18 @@ void Server::wait_cmd(BOARD_STATE board, int index)
 			tcp_server[index]->tcp_send(board_buf, 4096);
 		}
 
-		if (strcmp(recv_buf, "ACT") == 0)
+		if (cmd == "ACT")
 		{
 			tcp_server[index]->tcp_send("ok", 3);
 			server_state[index] = WAIT;
+		}
+
+		if (cmd == "NEW")
+		{
+			mtx.lock();
+			restart = true;
+			mtx.unlock();
+			tcp_server[index]->tcp_send("ok", 3);
 		}
 	}
 }

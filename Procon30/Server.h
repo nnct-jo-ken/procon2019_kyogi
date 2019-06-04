@@ -25,7 +25,7 @@ public:
 	Server(u_short port1, u_short port2);
 	void open();
 	void accept(int index);
-	void wait_cmd(BOARD_STATE board, int index);
+	void wait_cmd(BOARD_STATE board, int index, std::mutex& mtx, bool& restart);
 	void wait_act(int index, std::queue<ACT_STATE>& queue, std::mutex& mtx);
 	void close();
 };

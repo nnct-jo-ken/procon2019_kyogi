@@ -49,6 +49,7 @@ private:
 	
 public:
 	void init();
+	void clear();
 
 	void setAct(int team, int num, int act, Vector2 delta_pos);
 	void setTileState(Vector2 pos, int _team);
