@@ -37,6 +37,14 @@ void Renderer::init(BOARD_STATE board) {
 		rInfo.margin_right + rInfo.tile_side * board.height + rInfo.margin_bottom);
 }
 
+void Renderer::clear()
+{
+	render_board = { 0 };
+	ragents.clear();
+	tiles.clear();
+	input.clear();
+}
+
 void Renderer::update(std::vector<Agent>& agents){
 
 	for (RTile t : tiles) {

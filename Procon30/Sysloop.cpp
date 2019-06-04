@@ -1,9 +1,22 @@
 #include "Sysloop.h"
 
-void game_loop(Game& game, Renderer& renderer, std::queue<ACT_STATE>& queue, std::mutex& mtx)
+void game_loop(Game& game, Renderer& renderer, std::queue<ACT_STATE>& queue, std::mutex& mtx, bool& restart)
 {
 	while (System::Update())
 	{
+		mtx.lock();
+		if (restart)
+		{
+			restart = false;
+			mtx.unlock();
+
+			game.init();
+			renderer.init(game.getBoardState());
+		}
+		else {
+			mtx.unlock();
+		}
+
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
 		{
 			System::Exit();
@@ -19,7 +32,7 @@ void game_loop(Game& game, Renderer& renderer, std::queue<ACT_STATE>& queue, std
 	}
 }
 
-void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::mutex& mtx)
+void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::mutex& mtx, bool& restart)
 {
 	server.open();
 	while (1)
@@ -37,7 +50,7 @@ void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::
 				server.accept(i);
 				break;
 			case CONNECT:
-				server.wait_cmd(game.getBoardState(), i);
+				server.wait_cmd(game.getBoardState(), i, mtx, restart);
 				break;
 			case WAIT:
 				server.wait_act(i, queue, mtx);

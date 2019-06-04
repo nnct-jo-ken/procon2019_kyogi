@@ -55,6 +55,11 @@ void Game::init() {
 	board.game_score = countGameScore();
 }
 
+void Game::clear()
+{
+	board = { 0 };
+}
+
 void Game::parse_json(std::string json_str)
 {
 	std::string err;

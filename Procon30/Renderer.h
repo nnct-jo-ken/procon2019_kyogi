@@ -13,10 +13,12 @@ private:
 	std::vector<RTile>	tiles;
 	GUI_input			input;
 	Font				font;
-	void				initrInfo();
+
+	void initrInfo();
 
 public:
 	void init(BOARD_STATE board);
+	void clear();
 	void update(std::vector<Agent>& agents);
 	void updateTurn(BOARD_STATE board);
 };
