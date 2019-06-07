@@ -1,6 +1,6 @@
 #include "Buffers.h"
 
-std::string Buffers::createBoardBuffer(BOARD_STATE board, int team)
+std::string Buffers::createBoardBuffer(BOARD_STATE& board, int team)
 {
 	std::string buf = "";
 	// 幅、高さ、残りターン、1チーム当たりのエージェント数を書き込む

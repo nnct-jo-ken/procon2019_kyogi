@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <atomic>
 #include "TCP_Server.h"
 #include "json11/json11.hpp"
 #include "Game.h"
@@ -25,7 +26,7 @@ public:
 	Server(u_short port1, u_short port2);
 	void open();
 	void accept(int index);
-	void wait_cmd(BOARD_STATE board, int index, std::mutex& mtx, bool& restart);
+	void wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, std::atomic<bool>& update_turn);
 	void wait_act(int index, std::queue<ACT_STATE>& queue, std::mutex& mtx);
 	void close();
 };
