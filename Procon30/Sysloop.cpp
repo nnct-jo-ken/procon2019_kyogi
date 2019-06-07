@@ -1,38 +1,62 @@
 #include "Sysloop.h"
 
-void game_loop(Game& game, Renderer& renderer, std::queue<ACT_STATE>& queue, std::mutex& mtx, bool& restart)
+void game_loop(
+	Game& game, 
+	Renderer& renderer, 
+	std::queue<ACT_STATE>& queue,
+	std::mutex& mtx, 
+	std::atomic<bool>& restart, 
+	std::atomic<bool>& update_turn)
 {
 	while (System::Update())
 	{
-		mtx.lock();
-		if (restart)
+		if (restart.load())
 		{
-			restart = false;
-			mtx.unlock();
+			restart.store(false, std::memory_order_seq_cst);
+
+			mtx.lock();
+			game.clear();
+			renderer.clear();
 
 			game.init();
 			renderer.init(game.getBoardState());
-		}
-		else {
 			mtx.unlock();
 		}
-
+	
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
 		{
 			System::Exit();
 		}
-		game.load_queue(queue, mtx);
-		renderer.update(game.getAgentVector());
 
-		if (KeyEnter.down()) {
+		if (KeyEnter.down()) 
+		{
+			update_turn.store(true, std::memory_order_seq_cst);
+		}
+
+		if (update_turn.load())
+		{
+			update_turn.store(false, std::memory_order_seq_cst);
+			mtx.lock();
 			game.updateTurn();
+			mtx.unlock();
 			renderer.updateTurn(game.getBoardState());
 		}
-		Sleep(50);
+
+		game.load_queue(queue, mtx);
+		mtx.lock();
+		renderer.update(game.getAgentVector());
+		mtx.unlock();
+		Sleep(10);
 	}
 }
 
-void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::mutex& mtx, bool& restart)
+void server_loop(
+	Server& server, 
+	Game& game, 
+	std::queue<ACT_STATE>& queue, 
+	std::mutex& mtx, 
+	std::atomic<bool>& restart, 
+	std::atomic<bool>& update_turn)
 {
 	server.open();
 	while (1)
@@ -50,7 +74,9 @@ void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::
 				server.accept(i);
 				break;
 			case CONNECT:
-				server.wait_cmd(game.getBoardState(), i, mtx, restart);
+				mtx.lock();
+				server.wait_cmd(game.getBoardState(), i, restart, update_turn);
+				mtx.unlock();
 				break;
 			case WAIT:
 				server.wait_act(i, queue, mtx);
@@ -60,4 +86,14 @@ void server_loop(Server& server, Game& game, std::queue<ACT_STATE>& queue, std::
 		Sleep(20);
 	}
 	server.close();
+}
+
+void render_loop(
+	Game& game,
+	Renderer& renderer,
+	std::mutex& mtx,
+	std::atomic<bool>& restart,
+	std::atomic<bool>& update_turn)
+{
+
 }

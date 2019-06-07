@@ -38,7 +38,7 @@ void Server::accept(int index)
 	}
 }
 
-void Server::wait_cmd(BOARD_STATE board, int index, std::mutex& mtx, bool& restart)
+void Server::wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, std::atomic<bool>& update_turn)
 {
 	// クライアントからの要求を受け取る
 	// データの要求 : INFO
@@ -76,12 +76,20 @@ void Server::wait_cmd(BOARD_STATE board, int index, std::mutex& mtx, bool& resta
 			server_state[index] = WAIT;
 		}
 
-		if (cmd == "NEW")
+		// ポート7755からだけ受け取る
+		if (index == 0)
 		{
-			mtx.lock();
-			restart = true;
-			mtx.unlock();
-			tcp_server[index]->tcp_send("ok", 3);
+			if (cmd == "NEW")
+			{
+				restart.store(true, std::memory_order_seq_cst);
+				tcp_server[index]->tcp_send("ok", 3);
+			}
+
+			if (cmd == "UPDATE")
+			{
+				update_turn.store(true, std::memory_order_seq_cst);
+				tcp_server[index]->tcp_send("ok", 3);
+			}
 		}
 	}
 }
@@ -91,6 +99,7 @@ void Server::wait_act(int index, std::queue<ACT_STATE>& queue, std::mutex& mtx)
 	// クライアントからのデータを受け取る
 	char recv_buf[1024];
 	int n = tcp_server[index]->tcp_recv(recv_buf, 1024);
+	tcp_server[index]->tcp_send("ok", 3);
 
 	// クライアントが切断
 	if (n == 0)
