@@ -280,5 +280,8 @@
     <ClInclude Include="Sysloop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="share_obj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

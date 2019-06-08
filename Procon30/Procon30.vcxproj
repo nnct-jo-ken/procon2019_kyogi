@@ -268,6 +268,7 @@
     <ClInclude Include="Rendering_INFO.h" />
     <ClInclude Include="RTile.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="share_obj.h" />
     <ClInclude Include="TCP_Server.h" />
     <ClInclude Include="Sysloop.h" />
     <ClInclude Include="Vector2.h" />

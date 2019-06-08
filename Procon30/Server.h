@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <atomic>
+#include "share_obj.h"
 #include "TCP_Server.h"
 #include "json11/json11.hpp"
 #include "Game.h"

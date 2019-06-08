@@ -1,26 +1,20 @@
 #include "Sysloop.h"
 
-void game_loop(
-	Game& game, 
-	Renderer& renderer, 
-	std::queue<ACT_STATE>& queue,
-	std::mutex& mtx, 
-	std::atomic<bool>& restart, 
-	std::atomic<bool>& update_turn)
+void game_loop(share_obj& share, Renderer& renderer)
 {
 	while (System::Update())
 	{
-		if (restart.load())
+		if (share.restart.load())
 		{
-			restart.store(false, std::memory_order_seq_cst);
+			share.restart.store(false, std::memory_order_seq_cst);
 
-			mtx.lock();
-			game.clear();
+			share.mtx.lock();
+			share.game.clear();
 			renderer.clear();
 
-			game.init();
-			renderer.init(game.getBoardState());
-			mtx.unlock();
+			share.game.init();
+			renderer.init(share.game.getBoardState());
+			share.mtx.unlock();
 		}
 	
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
@@ -30,33 +24,27 @@ void game_loop(
 
 		if (KeyEnter.down()) 
 		{
-			update_turn.store(true, std::memory_order_seq_cst);
+			share.update_turn.store(true, std::memory_order_seq_cst);
 		}
 
-		if (update_turn.load())
+		if (share.update_turn.load())
 		{
-			update_turn.store(false, std::memory_order_seq_cst);
-			mtx.lock();
-			game.updateTurn();
-			mtx.unlock();
-			renderer.updateTurn(game.getBoardState());
+			share.update_turn.store(false, std::memory_order_seq_cst);
+			share.mtx.lock();
+			share.game.updateTurn();
+			share.mtx.unlock();
+			renderer.updateTurn(share.game.getBoardState());
 		}
 
-		game.load_queue(queue, mtx);
-		mtx.lock();
-		renderer.update(game.getAgentVector());
-		mtx.unlock();
+		share.game.load_queue(share.queue, share.mtx);
+		share.mtx.lock();
+		renderer.update(share.game.getAgentVector());
+		share.mtx.unlock();
 		Sleep(10);
 	}
 }
 
-void server_loop(
-	Server& server, 
-	Game& game, 
-	std::queue<ACT_STATE>& queue, 
-	std::mutex& mtx, 
-	std::atomic<bool>& restart, 
-	std::atomic<bool>& update_turn)
+void server_loop(share_obj& share, Server& server)
 {
 	server.open();
 	while (1)
@@ -74,26 +62,16 @@ void server_loop(
 				server.accept(i);
 				break;
 			case CONNECT:
-				mtx.lock();
-				server.wait_cmd(game.getBoardState(), i, restart, update_turn);
-				mtx.unlock();
+				share.mtx.lock();
+				server.wait_cmd(share.game.getBoardState(), i, share.restart, share.update_turn);
+				share.mtx.unlock();
 				break;
 			case WAIT:
-				server.wait_act(i, queue, mtx);
+				server.wait_act(i, share.queue, share.mtx);
 				break;
 			}
 		}
 		Sleep(20);
 	}
 	server.close();
-}
-
-void render_loop(
-	Game& game,
-	Renderer& renderer,
-	std::mutex& mtx,
-	std::atomic<bool>& restart,
-	std::atomic<bool>& update_turn)
-{
-
 }
