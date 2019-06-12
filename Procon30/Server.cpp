@@ -76,20 +76,17 @@ void Server::wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, 
 			server_state[index] = WAIT;
 		}
 
-		// ポート7755からだけ受け取る
-		if (index == 0)
-		{
-			if (cmd == "NEW")
-			{
-				restart.store(true, std::memory_order_seq_cst);
-				tcp_server[index]->tcp_send("ok", 3);
-			}
 
-			if (cmd == "UPDATE")
-			{
-				update_turn.store(true, std::memory_order_seq_cst);
-				tcp_server[index]->tcp_send("ok", 3);
-			}
+		if (cmd == "NEW")
+		{
+			restart.store(true, std::memory_order_seq_cst);
+			tcp_server[index]->tcp_send("ok", 3);
+		}
+
+		if (cmd == "UPDATE")
+		{
+			update_turn.store(true, std::memory_order_seq_cst);
+			tcp_server[index]->tcp_send("ok", 3);
 		}
 	}
 }

@@ -7,8 +7,9 @@ struct share_obj {
 	Game& game;
 	std::mutex& mtx;
 	std::queue<ACT_STATE>& queue;
-	std::atomic<bool>& restart;
-	std::atomic<bool>& update_turn;
+	std::array<std::atomic<bool>, 2>& restart;
+	std::array<std::atomic<bool>, 2>& update_turn;
 	std::atomic<bool>& restart_gui;
 	std::atomic<bool>& update_gui;
+	std::atomic<bool>& close_window;
 }typedef share_obj;

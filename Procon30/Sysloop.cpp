@@ -1,45 +1,44 @@
 #include "Sysloop.h"
 
-void game_loop(share_obj& share, Renderer& renderer)
+void game_loop(share_obj& share)
 {
-	while (System::Update())
+	while (1)
 	{
-		if (share.restart.load())
+		if (share.restart[0].load() && share.restart[1].load())
 		{
-			share.restart.store(false, std::memory_order_seq_cst);
-
+			for (int i = 0; i < 2; i++)
+			{
+				share.restart[i].store(false, std::memory_order_seq_cst);
+			}
 			share.mtx.lock();
 			share.game.clear();
-			renderer.clear();
-
 			share.game.init();
-			renderer.init(share.game.getBoardState());
 			share.mtx.unlock();
+			
+			// gui
+			share.restart_gui.store(true, std::memory_order_seq_cst);
 		}
 	
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
 		{
-			System::Exit();
+			break;
 		}
 
-		if (KeyEnter.down()) 
+		if (share.update_turn[0].load() && share.update_turn[1].load())
 		{
-			share.update_turn.store(true, std::memory_order_seq_cst);
-		}
-
-		if (share.update_turn.load())
-		{
-			share.update_turn.store(false, std::memory_order_seq_cst);
+			for (int i = 0; i < 2; i++)
+			{
+				share.update_turn[i].store(false, std::memory_order_seq_cst);
+			}
 			share.mtx.lock();
 			share.game.updateTurn();
 			share.mtx.unlock();
-			renderer.updateTurn(share.game.getBoardState());
+
+			// gui
+			share.update_gui.store(true, std::memory_order_seq_cst);
 		}
 
 		share.game.load_queue(share.queue, share.mtx);
-		share.mtx.lock();
-		renderer.update(share.game.getAgentVector());
-		share.mtx.unlock();
 		Sleep(10);
 	}
 }
@@ -51,6 +50,7 @@ void server_loop(share_obj& share, Server& server)
 	{
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
 		{
+			server.close();
 			break;
 		}
 
@@ -63,7 +63,7 @@ void server_loop(share_obj& share, Server& server)
 				break;
 			case CONNECT:
 				share.mtx.lock();
-				server.wait_cmd(share.game.getBoardState(), i, share.restart, share.update_turn);
+				server.wait_cmd(share.game.getBoardState(), i, share.restart[i], share.update_turn[i]);
 				share.mtx.unlock();
 				break;
 			case WAIT:
@@ -74,4 +74,45 @@ void server_loop(share_obj& share, Server& server)
 		Sleep(20);
 	}
 	server.close();
+}
+
+void render_loop(share_obj& share, Renderer& renderer)
+{
+	while (System::Update())
+	{
+		// ×ボタンが押された処理
+		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
+		{
+			System::Exit();
+		}
+
+		if (share.restart_gui.load())
+		{
+			share.restart_gui.store(false, std::memory_order_seq_cst);
+			share.mtx.lock();
+			renderer.clear();
+			renderer.init(share.game.getBoardState());
+			share.mtx.unlock();
+		}
+
+		if (share.update_gui.load())
+		{
+			share.update_gui.store(false, std::memory_order_seq_cst);
+			share.mtx.lock();
+			renderer.updateTurn(share.game.getBoardState());
+			share.mtx.unlock();
+		}
+
+		if (KeyEnter.down())
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				share.update_turn[i].store(true, std::memory_order_seq_cst);
+			}
+		}
+
+		share.mtx.lock();
+		renderer.update(share.game.getAgentVector());
+		share.mtx.unlock();
+	}
 }
