@@ -22,7 +22,7 @@ void Renderer::init(BOARD_STATE board) {
 	font = Font(20);
 	initrInfo();
 	render_board = board;
-	for (int i = 0; i < board.agent_count * 2; i++) {
+	for (int i = 0; i < board.agents_count * 2; i++) {
 		Vector2 pos = board.agents[i].getPos();
 		ragents.push_back(RAgent(board.agents[i].getTeam(), board.agents[i].getID(), i, Point(pos.x, pos.y), rInfo));
 	}

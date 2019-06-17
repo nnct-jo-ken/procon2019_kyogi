@@ -23,12 +23,12 @@ RAgent::RAgent(int _team, int _id, int _agent_index, Point _pos, const RInfo& _r
 	}
 	
 	if (_team == 1) {
-		color = _rInfo.team1_color;
+		surface_color = _rInfo.team1_color;
 	}
 	else {
-		color = _rInfo.team2_color;
+		surface_color = _rInfo.team2_color;
 	}
-	id = _id;
+	agent_id = _id;
 	pos = _pos;
 	UI_pos = getUIPos(_rInfo);
 	circle = Circle(UI_pos, _rInfo.agent_radius);
@@ -48,9 +48,9 @@ void RAgent::update(Point _pos, const RInfo& _rInfo) {
 }
 
 void RAgent::draw(const RInfo& _rInfo) {
-	circle.draw(color);
+	circle.draw(surface_color);
 	circle.drawFrame(2, _rInfo.line_color);
-	_rInfo.id_font(id).draw(Arg::center = UI_pos, Palette::Black);
+	_rInfo.id_font(agent_id).draw(Arg::center = UI_pos, Palette::Black);
 }
 
 void RAgent::drawArrow(const RInfo& _rInfo) {
