@@ -2,21 +2,21 @@
 
 int Game::getTileScore(int index)
 {
-	return board.tile_score[index];
+	return board.tile_points[index];
 }
 
 int Game::getTileScore(Vector2 pos)
 {
-	return board.tile_score[pos.y * board.width + pos.x];
+	return board.tile_points[pos.y * board.width + pos.x];
 }
 
 int Game::getTileState(int index)
 {
-	return board.tile_state[index];
+	return board.tile_color[index];
 }
 
 int Game::getTileState(Vector2 pos) {
-	return board.tile_state[pos.y * board.width + pos.x];
+	return board.tile_color[pos.y * board.width + pos.x];
 }
 
 int Game::getTurn() {
@@ -75,7 +75,7 @@ void Game::parse_json(std::string json_str)
 	{
 		for (int i = 0; i < board.width; i++)
 		{
-			board.tile_score.push_back(col[i].int_value());
+			board.tile_points.push_back(col[i].int_value());
 		}
 	}
 
@@ -87,15 +87,15 @@ void Game::parse_json(std::string json_str)
 			int tile_coler = col[i].int_value();
 			if (tile_coler == 0)
 			{
-				board.tile_state.push_back(tile_coler);
+				board.tile_color.push_back(tile_coler);
 			} 
 			else if (tile_coler == board.team_ID)
 			{
-				board.tile_state.push_back(1);
+				board.tile_color.push_back(1);
 			}
 			else
 			{
-				board.tile_state.push_back(2);
+				board.tile_color.push_back(2);
 			}
 		}
 	}
@@ -152,7 +152,7 @@ int Game::getHeight()
 
 int Game::getVectorSize()
 {
-	return (int)board.tile_score.size();
+	return (int)board.tile_points.size();
 }
 
 void Game::setAct(int team, int num, int act, Vector2 step) {
@@ -181,7 +181,7 @@ void Game::setTileState(Vector2 pos, int _team) {
 	if (_team != 1 && _team != 2) {
 		throw std::invalid_argument("Game::setTileState() exception.");
 	}
-	board.tile_state[pos.y * board.width + pos.x] = _team;
+	board.tile_color[pos.y * board.width + pos.x] = _team;
 }
 
 void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
@@ -285,7 +285,7 @@ bool Game::updateTurn() {
 	// 実際のデータを更新してリセットする
 	for (Agent& a : board.agents) {
 		if (a.getActType() == 2) {
-			board.tile_state[a.getTarget().y * board.width + a.getTarget().x] = 0;
+			board.tile_color[a.getTarget().y * board.width + a.getTarget().x] = 0;
 		} 
 		else {
 			a.setPos(a.getTarget());
@@ -335,13 +335,13 @@ void Game::areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, 
 	// 範囲外判定
 	if (x < 0 || x >= board.width || y < 0 || y >= board.height) { return; }
 	// 自分のチームのタイルの場合
-	if (board.tile_state[y * board.width + x] == team) { return; }
+	if (board.tile_color[y * board.width + x] == team) { return; }
 	// 既に探索済みの場合
 	if (table[y * board.width + x]) { return; }
 	// 筋判定
 	if (x == 0 || x == board.width - 1 || y == 0 || y == board.height - 1) { reach_end = true;}
 
-	tmp += abs(board.tile_score[y * board.width + x]);
+	tmp += abs(board.tile_points[y * board.width + x]);
 	table[y * board.width + x] = true;
 
 	areaScoreRecursion(team, x + 1, y, table, tmp, reach_end);
@@ -355,11 +355,11 @@ GAME_SCORE Game::countGameScore()
 	GAME_SCORE score_tmp = {};
 	for (int y = 0; y < board.height; y++)  {
 		for (int x = 0; x < board.width; x++) {
-			if (board.tile_state[y * board.width + x] == 1) {
-				score_tmp.tile_team1 += board.tile_score[y * board.width + x];
+			if (board.tile_color[y * board.width + x] == 1) {
+				score_tmp.tile_team1 += board.tile_points[y * board.width + x];
 			}
-			else if (board.tile_state[y * board.width + x] == 2) {
-				score_tmp.tile_team2 += board.tile_score[y * board.width + x];
+			else if (board.tile_color[y * board.width + x] == 2) {
+				score_tmp.tile_team2 += board.tile_points[y * board.width + x];
 			}
 		}
 	}

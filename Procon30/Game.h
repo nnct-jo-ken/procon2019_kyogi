@@ -26,8 +26,8 @@ struct BOARD_STATE {
 	int					turn;			// 試合の全ターン数
 	int					now_turn;		// 現在のターン数
 	int					agent_count;	// 各チームのエージェントの数 2 ～ 8
-	std::vector<int>	tile_score;		// 盤面の得点情報を記憶する配列　サイズは width * height
-	std::vector<int>	tile_state;		// タイルの色 0 or 1 or 2
+	std::vector<int>	tile_points;		// 盤面の得点情報を記憶する配列　サイズは width * height
+	std::vector<int>	tile_color;		// タイルの色 0 or 1 or 2
 	std::vector<Agent>	agents;			// エージェントたち。1つの配列に無理やり2チーム詰め込んでる
 	GAME_SCORE			game_score;
 }typedef BOARD_STATE;
