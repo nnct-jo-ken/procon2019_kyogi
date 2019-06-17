@@ -29,7 +29,7 @@ int Game::getNowTurn() {
 
 int Game::getAgentQant()
 {
-	return board.agent_count;
+	return board.agents_count;
 }
 
 std::vector<Agent>& Game::getAgentVector() {
@@ -103,11 +103,11 @@ void Game::parse_json(std::string json_str)
 	// エージェント格納
 	for (int i = 0; i < 2; i++)
 	{
-		board.agent_count = 0;
+		board.agents_count = 0;
 		auto team_obj = json["teams"].array_items()[i];
 		for (auto& agent_obj : team_obj["agents"].array_items())
 		{
-			board.agent_count++;
+			board.agents_count++;
 			board.agents.push_back(
 				Agent(
 					Vector2(
@@ -124,9 +124,9 @@ void Game::parse_json(std::string json_str)
 	// 自分のチームがコンテナの前半に来るように入れ替え
 	if (board.team_ID != json["teams"].array_items()[0]["teamID"].int_value())
 	{
-		for (int i = 0; i < board.agent_count; i++)
+		for (int i = 0; i < board.agents_count; i++)
 		{
-			std::iter_swap(&board.agents[i], &board.agents[i + board.agent_count]);
+			std::iter_swap(&board.agents[i], &board.agents[i + board.agents_count]);
 		}
 	}
 }
@@ -160,7 +160,7 @@ void Game::setAct(int team, int num, int act, Vector2 step) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	if (num < 0 || num <= board.agent_count) {
+	if (num < 0 || num <= board.agents_count) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
@@ -172,7 +172,7 @@ void Game::setAct(int team, int num, int act, Vector2 step) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	Agent& tmp = board.agents[(team - 1) * board.agent_count + num];
+	Agent& tmp = board.agents[(team - 1) * board.agents_count + num];
 	tmp.setActType(act);
 	tmp.setDeltaMove(tmp.getPos() + step);
 }
@@ -239,8 +239,8 @@ bool Game::updateTurn() {
 	while (inCheck) {
 		// エージェントの行動の変化がなくなるまで調べる
 		inCheck = false;
-		for (int i = 0; i < board.agent_count * 2 - 1; i++) {
-			for (int i2 = i + 1; i2 < board.agent_count * 2; i2++) {
+		for (int i = 0; i < board.agents_count * 2 - 1; i++) {
+			for (int i2 = i + 1; i2 < board.agents_count * 2; i2++) {
 				Vector2 checkingPos1 = board.agents[i].getTarget();
 				Vector2 checkingPos2 = board.agents[i2].getTarget();
 				if (board.agents[i].getTarget() == board.agents[i2].getTarget()) {

@@ -3,8 +3,8 @@
 
 class RAgent {
 private:
-	Color				color;
-	int					id;
+	Color				surface_color;
+	int					agent_id;
 	int					agent_index;
 	Point				pos;
 	OPERATION_STATE		ostate;

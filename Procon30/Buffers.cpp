@@ -41,7 +41,7 @@ std::string Buffers::createJson(BOARD_STATE board, int team)
 
 	// エージェントのリスト作成
 	std::vector<json11::Json> agent_list[2];
-	for (int i = 0; i < board.agent_count; i++)
+	for (int i = 0; i < board.agents_count; i++)
 	{
 		agent_list[0].push_back(json11::Json::object({
 				{"agentID", board.agents[i].getID()},
@@ -50,7 +50,7 @@ std::string Buffers::createJson(BOARD_STATE board, int team)
 			})
 		);
 	}
-	for (int i = board.agent_count; i < board.agent_count * 2; i++)
+	for (int i = board.agents_count; i < board.agents_count * 2; i++)
 	{
 		agent_list[1].push_back(json11::Json::object({
 				{"agentID", board.agents[i].getID()},
@@ -104,7 +104,7 @@ std::string Buffers::createJson(BOARD_STATE board, int team)
 	game_json = json11::Json::object({
 		{"width", board.width},
 		{"height", board.height},
-		{"agentCount", board.agent_count},
+		{"agentCount", board.agents_count},
 		{"points", tile_score},
 		{"turn", board.turn},
 		{"tiled", tile_color},
