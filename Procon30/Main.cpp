@@ -30,22 +30,17 @@ void Main() {
 		close_window
 	};
 
+	Console.open();
+
 	// 初期化
 	game1.init();
 	renderer1.init(game1.getBoardState());
-#ifndef GUI
-	Console.open();
-#endif
 	// スレッド開始
 	std::thread gameThread1(game_loop, std::ref(share));
 	std::thread serverThread1(server_loop, std::ref(share), std::ref(server1));
-#ifdef GUI
 	std::thread renderThread1(render_loop, std::ref(share), std::ref(renderer1));
-#endif
 
 	gameThread1.join();
 	serverThread1.join();
-#ifdef GUI
 	renderThread1.join();
-#endif
 }

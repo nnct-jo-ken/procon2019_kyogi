@@ -57,7 +57,7 @@ void Server::wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, 
 		std::string cmd(recv_buf);
 		if (cmd == "INFO")
 		{
-			std::string board_str = Buffers::createBoardBuffer(board, index + 1);
+			std::string board_str = Buffers::createJson(board, index + 1);
 			char board_buf[4096] = { 0 };
 			// string char* 変換
 			int i;
