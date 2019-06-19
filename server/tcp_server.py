@@ -10,14 +10,14 @@ class TcpServer:
         self.sock.bind((self.host, self.port))
 
     def listen(self):
-        self.sock.listen(5)
-        self.clientsock, self.client_address = self.sock.accept()
+        self.sock.listen(1)
+        self.client, self.client_address = self.sock.accept()
 
     def recv(self):
-        return self.sock.recv(8192)
+        return self.client.recv(8192)
 
     def send(self, strs):
-        self.sock.send(strs.encode('utf-8'))
+        self.client.send(strs.encode('utf-8'))
     
     def close(self):
-        self.sock.close()
+        self.client.close()

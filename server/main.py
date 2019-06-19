@@ -2,9 +2,10 @@ from game import Game
 from tcp_server import TcpServer
 import threading
 import time
+import socket
 
 def game_loop(game):
-    print(game.get_board_json())
+    print(game)
 
 def gui_connection_loop(game):
     server = TcpServer(2525)
@@ -17,8 +18,10 @@ def gui_connection_loop(game):
         # "ACT"     行動送信
         # "NEW"
         # "UPDATE"
-        cmd = server.recv()
+        print("recv")
+        cmd = server.recv().decode('utf-8')
         if (cmd == "INFO"):
+            print("send")
             server.send(game.get_board_json())
 
     server.close()

@@ -4,6 +4,7 @@
 #include "Game.h"
 #include "Renderer.h"
 #include "TcpClient.h"
+#include <Windows.h>
 
 void Main() {
 	Game game1;
@@ -21,4 +22,6 @@ void Main() {
 	std::cout << json_str << std::endl;
 
 	client.tcp_close();
+
+	Sleep(10000);
 }
