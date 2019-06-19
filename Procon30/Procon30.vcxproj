@@ -198,7 +198,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Agent.cpp" />
-    <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GUI_input.cpp" />
     <ClCompile Include="json11\json11.cpp" />
@@ -206,9 +205,7 @@
     <ClCompile Include="RAgent.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RTile.cpp" />
-    <ClCompile Include="Server.cpp" />
-    <ClCompile Include="TCP_Server.cpp" />
-    <ClCompile Include="Sysloop.cpp" />
+    <ClCompile Include="TcpClient.cpp" />
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -259,7 +256,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Agent.h" />
-    <ClInclude Include="Buffers.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GUI_input.h" />
     <ClInclude Include="json11\json11.hpp" />
@@ -267,10 +263,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Rendering_INFO.h" />
     <ClInclude Include="RTile.h" />
-    <ClInclude Include="Server.h" />
-    <ClInclude Include="share_obj.h" />
-    <ClInclude Include="TCP_Server.h" />
-    <ClInclude Include="Sysloop.h" />
+    <ClInclude Include="TcpClient.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

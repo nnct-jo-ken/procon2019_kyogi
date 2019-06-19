@@ -102,19 +102,10 @@
     <ClCompile Include="GUI_input.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Buffers.cpp">
-      <Filter>Source Files\Connection</Filter>
-    </ClCompile>
     <ClCompile Include="json11\json11.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Server.cpp">
-      <Filter>Source Files\Connection</Filter>
-    </ClCompile>
-    <ClCompile Include="TCP_Server.cpp">
-      <Filter>Source Files\Connection</Filter>
-    </ClCompile>
-    <ClCompile Include="Sysloop.cpp">
+    <ClCompile Include="TcpClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -268,19 +259,7 @@
     <ClInclude Include="json11\json11.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Buffers.h">
-      <Filter>Header Files\Connection</Filter>
-    </ClInclude>
-    <ClInclude Include="Server.h">
-      <Filter>Header Files\Connection</Filter>
-    </ClInclude>
-    <ClInclude Include="TCP_Server.h">
-      <Filter>Header Files\Connection</Filter>
-    </ClInclude>
-    <ClInclude Include="Sysloop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="share_obj.h">
+    <ClInclude Include="TcpClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
