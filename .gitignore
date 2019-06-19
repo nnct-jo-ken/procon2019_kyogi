@@ -1,3 +1,4 @@
-.vs/
-Intermediate/
-Procon30/
+*.exe
+*.html
+/Intermediate
+/.vs
