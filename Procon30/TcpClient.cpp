@@ -1,3 +1,4 @@
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "TcpClient.h"
 
 TcpClient::TcpClient()
@@ -26,5 +27,10 @@ std::string TcpClient::tcp_recv()
 
 void TcpClient::tcp_send(std::string str)
 {
-	send(sock, str.c_str(), str.length(), 0);
+	send(sock, str.c_str(), static_cast<int>(str.length()), 0);
+}
+
+void TcpClient::tcp_close()
+{
+	WSACleanup();
 }

@@ -106,7 +106,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TcpClient.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Connection</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -260,7 +260,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TcpClient.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Connection</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
