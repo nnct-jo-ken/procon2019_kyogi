@@ -1,6 +1,7 @@
 from agent import Agent
 import board_random
 import random
+import json
 
 class Game:
     def __init__(self):
@@ -13,7 +14,10 @@ class Game:
         self.my_agents = []     # Agent型
         self.enemy_agents = []
         self.agents_count = len(my_agents_list) # 1チームのエージェントの数
-        self.turn = random.randint(30, 60)
+        self.all_turn = random.randint(30, 60)  # 総ターン数
+        self.turn = 0                           # 現在のターン数
+        self.tile_score = []   # タイル得点 [0]が自チーム、[1]が敵チーム
+        self.area_score = []   # 領域得点          //
 
         for line in board:
             for p in line:
@@ -35,4 +39,46 @@ class Game:
             self.tile_color[e1.y * self.width + e1.x] = 1
             self.tile_color[e2.y * self.width + e2.x] = 2
 
-        print(self.tile_color)
+        # debug用　削除予定
+        for i in range(0, 2):
+            self.tile_score.append(0)
+            self.area_score.append(0)
+
+        
+    # 盤面のjsonを作る
+    # 詳細はreadme参照
+    def get_board_json(self):
+        my_agents_list = []
+        enemy_agents_list = []
+        for e1, e2 in zip(self.my_agents, self.enemy_agents):
+            my_agents_list.append({
+                    "id": e1.agent_id,
+                    "x": e1.x,
+                    "y": e1.y
+            })
+
+            enemy_agents_list.append({
+                    "id": e2.agent_id,
+                    "x": e2.x,
+                    "y": e2.y
+            })
+
+        json_dic = {
+            "width": self.width,
+            "height": self.height,
+            "turn": self.turn,
+            "points": self.tile_points,
+            "tiled": self.tile_color,
+            "team1": {
+                "agents": my_agents_list,
+                "tilePoint": self.tile_score[0],
+                "areaPoint": self.area_score[0]
+            },
+            "team2": {
+                "agents": enemy_agents_list,
+                "tilePoint": self.tile_score[1],
+                "areaPoint": self.area_score[1]
+            }
+        }
+
+        return json.dumps(json_dic)
