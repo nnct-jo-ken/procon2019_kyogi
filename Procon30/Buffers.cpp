@@ -44,10 +44,11 @@ std::string Buffers::createJson(BOARD_STATE board, int team)
 	for (int i = 0; i < board.agents_count; i++)
 	{
 		agent_list[0].push_back(json11::Json::object({
-				{"agentID", board.agents[i].getID()},
-				{"x", board.agents[i].getPos().x},
-				{"y", board.agents[i].getPos().y}
-			})
+				{"agentID", board.agents[i].getID()},		// int
+				{"x", board.agents[i].getPos().x},			// int
+				{"y", board.agents[i].getPos().y},			// int
+				{"butting", board.agents[i].getButting()},	// bool
+				{"badAct", board.agents[i].getDoneBadAct()} }) // bool
 		);
 	}
 	for (int i = board.agents_count; i < board.agents_count * 2; i++)
@@ -55,8 +56,9 @@ std::string Buffers::createJson(BOARD_STATE board, int team)
 		agent_list[1].push_back(json11::Json::object({
 				{"agentID", board.agents[i].getID()},
 				{"x", board.agents[i].getPos().x},
-				{"y", board.agents[i].getPos().y}
-			})
+				{"y", board.agents[i].getPos().y},
+				{"butting", board.agents[i].getButting()},
+				{"badAct", board.agents[i].getDoneBadAct()} })
 		);
 	}
 

@@ -6,26 +6,31 @@
 class Agent {
 
 private:
-	Vector2		pos;	// エージェントの位置
-	Vector2		target_pos; // 次のターンの移動先
+	Vector2		pos;			// エージェントの位置
+	Vector2		target_pos;		// 次のターンの移動先
 	int			act_type;		// 行動の種類 0:動かない 1:移動 2:タイル除去
-	int			team;		// チーム. 1 or 2
+	int			team;			// チーム. 1 or 2
 	int			ID;
-
+	bool		done_butting;	// 前のターンにバッティングしたかどうか
+	bool		done_bad_act;	// 手が有効だったか
 public:
 	Agent();
 	Agent(Vector2 _pos, int _team, int _ID);
 
-	void setPos(Vector2 _pos);	// x, yともに整数
-	void setDeltaMove(Vector2 _step); // x, y ともに-1 ~ 1の間で指定
+	void setPos(Vector2 _pos);			// x, yともに整数
+	void setDeltaMove(Vector2 _step);	// x, y ともに-1 ~ 1の間で指定
 	void setActType(int _state);
 	void setTeam(int _team);
+	void setButting(bool is_butting);
+	void setBadAct(bool bad_act);
 
 	Vector2 getPos();
 	Vector2 getTarget(); // 絶対座標を返す
 	int getActType();
 	int getTeam();
 	int getID();
+	bool getButting();
+	bool getDoneBadAct();
 
 	void resetAct();	// エージェントの行動をリセット
 };

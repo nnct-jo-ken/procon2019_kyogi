@@ -204,29 +204,62 @@ void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
 	mtx.unlock();
 }
 
-bool Game::updateTurn() {
-	// エージェントの移動先が盤面の範囲内かを調べる
-	for (Agent& a : board.agents) {
-		Vector2 t_pos = a.getTarget();
-		if (t_pos.x < 0 || t_pos.y < 0 || t_pos.x >= board.width || t_pos.y >= board.height) {
-			a.resetAct();
+bool Game::updateTurn() 
+{
+
+	// 最初から停留だったエージェントを調べておく
+	// この関数の最後にこれらのエージェントはバッティングを起こさなかったことにする
+	std::vector<bool> was_stay;
+	for (Agent a : board.agents)
+	{
+		if (a.getActType() == 0)
+		{
+			was_stay.push_back(true);
+		}
+		else
+		{
+			was_stay.push_back(false);
 		}
 	}
 
-	// 移動先のタイルと自身の色を比較して移動か削除かを決める
-	for (Agent& a : board.agents) {
-		if (a.getActType() == 0) {
+	// バッティングと不正の記録のリセット
+	for (Agent& a : board.agents)
+	{
+		a.setButting(false);
+		a.setBadAct(false);
+	}
+
+	// エージェントの移動先が盤面の範囲内かを調べる
+	for (Agent& a : board.agents) 
+	{
+		Vector2 t_pos = a.getTarget();
+		if (t_pos.x < 0 || t_pos.y < 0 || t_pos.x >= board.width || t_pos.y >= board.height) {
 			a.resetAct();
+			// 不正として処理
+			a.setBadAct(true);
 		}
-		if (a.getActType() == 1) {
+	}
+
+	// 移動先のタイルと自身の色を比較して移動か削除かを決める（不正チェック）
+	for (Agent& a : board.agents) {
+		switch (a.getActType())
+		{
+		case 0:
+			a.resetAct();
+			a.setBadAct(true);
+			break;
+		case 1:
 			if (getTileState(a.getTarget()) != 0 && getTileState(a.getTarget()) != a.getTeam()) {
+				a.setBadAct(true);
 				a.resetAct();
 			}
-		}
-		if (a.getActType() == 2) {
+			break;
+		case 2:
 			if (getTileState(a.getTarget()) == 0) {
+				a.setBadAct(true);
 				a.resetAct();
 			}
+			break;
 		}
 	}
 
@@ -247,12 +280,15 @@ bool Game::updateTurn() {
 					buttingTable[checkingPos1.y * board.width + checkingPos1.x] = true;
 					board.agents[i].resetAct();
 					board.agents[i2].resetAct();
+					board.agents[i].setButting(true);
+					board.agents[i2].setButting(true);
 					inCheck = true;
 				}
 				if (board.agents[i].getActType() == 2) {
 					if (board.agents[i].getPos() == board.agents[i2].getTarget()) {
 						buttingTable[checkingPos2.y * board.width + checkingPos2.x] = true;
 						board.agents[i2].resetAct();
+						board.agents[i2].setButting(true);
 						inCheck = true;
 					}
 				}
@@ -260,6 +296,7 @@ bool Game::updateTurn() {
 					if (board.agents[i2].getPos() == board.agents[i].getTarget()) {
 						buttingTable[checkingPos1.y * board.width + checkingPos1.x] = true;
 						board.agents[i].resetAct();
+						board.agents[i].setButting(true);
 						inCheck = true;
 					}
 				}
@@ -269,12 +306,14 @@ bool Game::updateTurn() {
 				}
 				if (board.agents[i].getActType() != 0) {
 					if (buttingTable[checkingPos1.y * board.width + checkingPos1.x]) {
+						board.agents[i].setButting(true);
 						board.agents[i].resetAct();
 					}
 				}
 
 				if (board.agents[i2].getActType() != 0) {
 					if (buttingTable[checkingPos2.y * board.width + checkingPos2.x]) {
+						board.agents[i2].setButting(true);
 						board.agents[i2].resetAct();
 					}
 				}
@@ -282,8 +321,26 @@ bool Game::updateTurn() {
 		}
 	}
 
+	// 停留を選んだエージェントと不正をしたエージェントはバッティングを起こさなかったことにする
+	int i = 0;
+	for (Agent& a : board.agents)
+	{
+		if (was_stay[i])
+		{
+			a.setButting(false);
+			a.setBadAct(false);
+		}
+
+		if (a.getDoneBadAct())
+		{
+			a.setButting(false);
+		}
+		i++;
+	}
+
 	// 実際のデータを更新してリセットする
-	for (Agent& a : board.agents) {
+	for (Agent& a : board.agents) 
+	{
 		if (a.getActType() == 2) {
 			board.tile_color[a.getTarget().y * board.width + a.getTarget().x] = 0;
 		} 

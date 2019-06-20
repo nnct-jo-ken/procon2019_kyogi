@@ -30,8 +30,6 @@ void Main() {
 		close_window
 	};
 
-	Console.open();
-
 	// 初期化
 	game1.init();
 	renderer1.init(game1.getBoardState());
