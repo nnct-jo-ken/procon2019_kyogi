@@ -32,7 +32,6 @@ void game_loop(share_obj& share)
 			}
 			share.mtx.lock();
 			share.game.updateTurn();
-			std::cout << Buffers::createJson(share.game.getBoardState(), 1);
 			share.mtx.unlock();
 
 			// gui

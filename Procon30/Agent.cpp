@@ -6,6 +6,8 @@ Agent::Agent()
 	target_pos = Vector2(0, 0);
 	act_type = 0;
 	team = 0;
+	done_butting = false;
+	done_bad_act = false;
 }
 
 Agent::Agent(Vector2 _pos, int _team, int _ID)
@@ -18,6 +20,8 @@ Agent::Agent(Vector2 _pos, int _team, int _ID)
 	}
 	team = _team;
 	ID = _ID;
+	done_butting = false;
+	done_bad_act = false;
 }
 
 void Agent::setPos(Vector2 _pos) {
@@ -52,6 +56,16 @@ void Agent::setTeam(int _team) {
 	team = _team;
 }
 
+void Agent::setButting(bool is_butting)
+{
+	done_butting = is_butting;
+}
+
+void Agent::setBadAct(bool bad_act)
+{
+	done_bad_act = bad_act;
+}
+
 Vector2 Agent::getPos() {
 	return pos;
 }
@@ -71,6 +85,16 @@ int Agent::getTeam() {
 int Agent::getID()
 {
 	return ID;
+}
+
+bool Agent::getButting()
+{
+	return done_butting;
+}
+
+bool Agent::getDoneBadAct()
+{
+	return done_bad_act;
 }
 
 void Agent::resetAct() {
