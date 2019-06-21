@@ -1,4 +1,5 @@
 import json
+# 自作モジュール
 from agent import Agent
 
 class Board:

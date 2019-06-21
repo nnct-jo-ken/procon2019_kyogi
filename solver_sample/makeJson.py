@@ -1,4 +1,5 @@
 import json
+# 自作モジュール
 from actinfo import ActInfo
 
 def make_json(act_list):
