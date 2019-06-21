@@ -8,10 +8,8 @@ from actinfo import ActInfo
 
 class Solver():
     def __init__(self, port):
-        super(Solver, self).__init__()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(("127.0.0.1", port))
-        self.running = True
         self.pre_turn = -1
         
     def run(self):
@@ -34,6 +32,7 @@ class Solver():
             connection.send_act(self.sock, strs)
 
     # エージェントをランダムに移動させる行動リストを作る
+    # AIの中心部
     def make_random(self, board):
         act_list = []
         for i in board.agents_list[0]:
@@ -45,9 +44,6 @@ class Solver():
             )
             act_list.append(act)
         return act_list
-
-    def stop(self):
-        self.running = False
 
     # デストラクタ
     def __del__(self):
