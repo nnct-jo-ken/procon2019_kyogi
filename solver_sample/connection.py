@@ -1,4 +1,5 @@
 import socket
+# 自作モジュール
 from board import Board
 
 def get_info(sock):
