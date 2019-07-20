@@ -35,6 +35,9 @@ void Renderer::init(BOARD_STATE board) {
 	Graphics::SetBackground(rInfo.background_color);
 	Window::Resize(rInfo.margin_left + rInfo.tile_side * board.width + rInfo.margin_right + 200,
 		rInfo.margin_right + rInfo.tile_side * board.height + rInfo.margin_bottom);
+
+	std::cout << "board agent : " << board.agents_count << std::endl;
+	std::cout << "gui agent   : " << ragents.size() / 2 << std::endl;
 }
 
 void Renderer::clear()

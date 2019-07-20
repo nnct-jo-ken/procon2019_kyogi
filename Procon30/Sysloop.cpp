@@ -1,11 +1,18 @@
 #include "Sysloop.h"
 
+int game_count = 1;
+
 void game_loop(share_obj& share)
 {
 	while (1)
 	{
 		if (share.restart[0].load() && share.restart[1].load())
 		{
+			game_count++;
+			std::cout << "game count : " << game_count << std::endl;
+			// gui
+			share.restart_gui.store(true, std::memory_order_seq_cst);
+
 			for (int i = 0; i < 2; i++)
 			{
 				share.restart[i].store(false, std::memory_order_seq_cst);
@@ -13,10 +20,7 @@ void game_loop(share_obj& share)
 			share.mtx.lock();
 			share.game.clear();
 			share.game.init();
-			share.mtx.unlock();
-			
-			// gui
-			share.restart_gui.store(true, std::memory_order_seq_cst);
+			share.mtx.unlock();			
 		}
 	
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
@@ -103,13 +107,13 @@ void render_loop(share_obj& share, Renderer& renderer)
 			share.mtx.unlock();
 		}
 
-		if (KeyEnter.down())
+		/*if (KeyEnter.down())
 		{
 			for (int i = 0; i < 2; i++)
 			{
 				share.update_turn[i].store(true, std::memory_order_seq_cst);
 			}
-		}
+		}*/
 
 		share.mtx.lock();
 		renderer.update(share.game.getAgentVector());

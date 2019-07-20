@@ -36,23 +36,43 @@ std::vector<Agent>& Game::getAgentVector() {
 	return board.agents;
 }
 
-void Game::init() {
-	// ./resource/field.jsonを読み込み、反映する
-	// ファイル読み込み
-	std::ifstream ifs("../resource/field.json");
-	if (ifs.fail()) {
-		exit(-1);
-	}
+void Game::init() 
+{
+	std::thread py_server([] {system("python ../Board_Generator.py"); });
+	py_server.detach();
 
-	// なんかやばい方法
-	std::istreambuf_iterator<char> it(ifs);
-	std::istreambuf_iterator<char> last;
-	std::string str(it, last);
+	std::string strs;
+	strs = getJsonFromServer();
+
 	// 仮チームID
-	board.team_ID = 5;
-	parse_json(str);
+	board.team_ID = 1;
+	parse_json(strs);
 
 	board.game_score = countGameScore();
+}
+
+std::string Game::getJsonFromServer() 
+{
+	WSADATA wsaData;
+	struct sockaddr_in server;
+	SOCKET sock;
+	char buf[8192] = {};
+
+	WSAStartup(MAKEWORD(2, 0), &wsaData);
+
+	sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	server.sin_family = AF_INET;
+	server.sin_port = htons(5678);
+	server.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+
+	connect(sock, (struct sockaddr*) & server, sizeof(server));
+
+	recv(sock, buf, sizeof(buf), 0);
+
+	WSACleanup();
+
+	return std::string(buf);
 }
 
 void Game::clear()
@@ -67,7 +87,7 @@ void Game::parse_json(std::string json_str)
 	
 	board.width = json["width"].int_value();
 	board.height = json["height"].int_value();
-	board.turn = json["turn"].int_value();
+	board.turn = json["allTurn"].int_value() - json["turn"].int_value();
 	board.now_turn = json["turn"].int_value();
 
 	// タイルポイント
