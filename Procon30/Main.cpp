@@ -1,8 +1,9 @@
 ﻿#pragma once
-#include "share_obj.h"
 #include "Sysloop.h"
+#include "share_obj.h"
 
 #define GUI
+
 
 void Main() {
 	constexpr bool NO_GUI = true;
@@ -10,6 +11,8 @@ void Main() {
 	Renderer renderer1;
 	Server server1 = Server(7755, 7756);
 	System::SetExitEvent(WindowEvent::CloseButton);
+
+	Console.open();
 
 	std::mutex mtx;
 	std::queue<ACT_STATE> queue;

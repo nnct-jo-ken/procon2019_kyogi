@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
+#include "Renderer.h"
 #include "share_obj.h"
 #include "Game.h"
-#include "Renderer.h"
 #include "Server.h"
 
 void game_loop(share_obj& share);

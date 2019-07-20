@@ -1,3 +1,5 @@
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #pragma once
 #include <vector>
 #include <iostream>
@@ -6,6 +8,7 @@
 #include <iterator>
 #include <mutex>
 #include <queue>
+#include <WinSock2.h>
 #include "json11/json11.hpp"
 #include "Agent.h"
 
@@ -46,7 +49,8 @@ private:
 	int getAreaScore(int team);
 	void areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, int& tmp, bool& reach_end);
 	void parse_json(std::string str_json);
-	
+	std::string getJsonFromServer();
+
 public:
 	void init();
 	void clear();
