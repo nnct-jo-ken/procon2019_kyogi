@@ -4,7 +4,7 @@ from board import Board
 
 def get_info(sock):
     sock.sendall(b'INFO')
-    buf = sock.recv(4096)
+    buf = sock.recv(8192)
     strs = buf.decode().replace('\0', '')
     return Board(strs)
     

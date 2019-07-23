@@ -16,7 +16,7 @@ class Solver():
         # 受信
         board = connection.get_info(self.sock)
 
-            # ターンが0以下になったら新規ゲームを要求する
+        # ターンが0以下になったら新規ゲームを要求する
         if board.turn <= 0:
             connection.send_new(self.sock)
             return
