@@ -4,6 +4,7 @@ import random
 import json
 import socket
 import sys
+import datetime
 
 def make_board():
 	#盤面のパターン決定
@@ -99,6 +100,7 @@ def make_board():
 
 if __name__=='__main__':
 
+	# 重複回避
 	while True:
 		BOARD, MY_AGENTS, ENEMY_AGENTS, MY, ENEMY = make_board()
 		# 重複確認
@@ -107,13 +109,46 @@ if __name__=='__main__':
 		test = np.unique(test, axis=0)
 		a_len = len(test)
 
+		if len(MY_AGENTS) != len(ENEMY_AGENTS):
+			continue
+
 		if b_len == a_len:
 			break
 
 	tiled_array = MY + ENEMY * 2
 	MY_AGENTS += 1
 	ENEMY_AGENTS += 1
-	
+
+	log_dump = '-------------------------------------------------------------\n'
+	log_dump += str(datetime.datetime.now())
+	log_dump += '\n'
+	log_dump += str(BOARD)
+	log_dump += '\n\n'
+	log_dump += str(MY)
+	log_dump += '\n\n'
+	log_dump += str(ENEMY)
+	log_dump += '\n\n'
+	log_dump += str(MY_AGENTS)
+	log_dump += '\n\n'
+	log_dump += str(ENEMY_AGENTS)
+	log_dump += '\n\n'
+
+
+	'''
+
+		f.write('--------------------------------------------------------------\n')
+		f.write(str(datetime.datetime.now()))
+		f.write('\n')
+		f.write(str(BOARD))
+		f.write('\n\n')
+		f.write(str(MY))
+		f.write('\n\n')
+		f.write(str(ENEMY))
+		f.write('\n\n')
+		f.write(str(MY_AGENTS))
+		f.write('\n\n')
+		f.write(str(ENEMY_AGENTS))'''
+		
 	BOARD = BOARD.tolist()
 	tiled_array = tiled_array.tolist()
 	MY_AGENTS = MY_AGENTS.tolist()
@@ -169,6 +204,23 @@ if __name__=='__main__':
 	}
 
 	json_str = json.dumps(json_dict)
+	"""
+	with open(log_file_path, mode='a') as f:
+		f.write('\n\n')
+		f.write(json_str)
+	"""
+	log_dump += json_str
+
+	log_file_path = 'py_server.log'
+	# log出力
+	try:
+		with open(log_file_path, mode='x') as f:
+			f.write('')
+	except FileExistsError:
+		pass
+
+	with open(log_file_path, mode='a') as f:
+		f.write(log_dump)
 
 	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 		s.bind(('127.0.0.1', 5678))

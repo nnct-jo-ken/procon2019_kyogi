@@ -58,7 +58,7 @@ void Server::wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, 
 		if (cmd == "INFO")
 		{
 			std::string board_str = Buffers::createJson(board, index + 1);
-			char board_buf[4096] = { 0 };
+			char board_buf[8192] = { 0 };
 			// string char* 変換
 			int i;
 			for (i = 0; i < board_str.length(); i++)
@@ -67,7 +67,7 @@ void Server::wait_cmd(BOARD_STATE board, int index, std::atomic<bool>& restart, 
 			}
 			board_buf[i] = 0;
 
-			tcp_server[index]->tcp_send(board_buf, 4096);
+			tcp_server[index]->tcp_send(board_buf, 8192);
 		}
 
 		if (cmd == "ACT")
