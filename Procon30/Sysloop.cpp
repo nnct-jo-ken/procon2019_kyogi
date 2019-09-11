@@ -107,13 +107,13 @@ void render_loop(share_obj& share, Renderer& renderer)
 			share.mtx.unlock();
 		}
 
-		/*if (KeyEnter.down())
+		if (KeyEnter.down())
 		{
 			for (int i = 0; i < 2; i++)
 			{
 				share.update_turn[i].store(true, std::memory_order_seq_cst);
 			}
-		}*/
+		}
 
 		share.mtx.lock();
 		renderer.update(share.game.getAgentVector());

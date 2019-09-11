@@ -27,7 +27,6 @@ class Solver():
             act_list = self.make_random(board)
             # ActInfo[] から json(文字列)へ変換
             strs = make_json(act_list)
-
             # 送信
             connection.send_act(self.sock, strs)
 
@@ -35,6 +34,7 @@ class Solver():
     # AIの中心部
     def make_random(self, board):
         act_list = []
+        print(board.agents_list[0])
         for i in board.agents_list[0]:
             act = ActInfo(
                 i.agent_id,

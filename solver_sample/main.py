@@ -8,4 +8,5 @@ enemy_solver = Solver(7756)
 
 while True:
     my_solver.run()
-    enemy_solver.run()
+    # ↓コメントを外すと敵もＡＩで動く
+    #enemy_solver.run()

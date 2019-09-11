@@ -1,0 +1,53 @@
+----ソルバーの作り方----
+solver.pyのmake_random()を参考にしてください
+1.自分のチームのエージェント分の、ActInfoクラスのリストを作ります(actinfo.pyを参照)
+2.solver.pyのrun()のact_listに渡します(27行目)
+※盤面の情報はrun()のboardにあります　以下を参照して確かめてください
+
+
+----動かし方-----
+1./Procon30/App/Procon30(64-bit).exe を起動
+2.ソルバーのmain.pyを起動
+
+----GUIの操作方法----
+Enterで次のターン
+
+----クラスの解説-----
+Boardクラス
+メンバ------------------------
+int turn
+int width
+int height
+int agents_count
+int my_tile_score
+int my_area_score
+int enemy_tile_score
+int enemy_area_score
+int[][] tile_points
+int[][] tile_color
+Agent[][] agents_list
+------------------------------
+agents_count	:１チームのエージェント数
+tile_points	:タイルの得点 tile_points[y][x]
+tile_color	:タイルの色 0が塗られてない、1が自分、２が敵 tile_color[y][x]
+agents_list	:エージェントのリスト
+           	 agents_list[0]が自チーム、agents_list[1]が敵チーム
+	　 	 agents_list[0 or 1][0～(agents_count-1)]
+
+
+Agentクラス
+メンバ------------------
+int x
+int y
+int agent_id
+int team
+int done_butting
+int done_but_act
+-----------------------
+x		:座標 0～(width - 1)
+y	 	:     0～(height - 1)
+team		:1が自分、2が敵
+done_butting	:前のターンに行動が被った
+done_but_act	:前のターンに無効な行動を送信した
+
+
