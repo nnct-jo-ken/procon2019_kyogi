@@ -6,7 +6,7 @@ void game_loop(share_obj& share)
 {
 	while (1)
 	{
-		if (share.restart[0].load() && share.restart[1].load())
+		if (share.restart[0].load() || share.restart[1].load())
 		{
 			game_count++;
 			std::cout << "game count : " << game_count << std::endl;
