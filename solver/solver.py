@@ -1,6 +1,7 @@
 import socket
 import random
 import numpy as np
+import procon_env.utility as util
 
 # 自作モジュール
 import connection
@@ -35,19 +36,6 @@ class Solver():
     # エージェントをランダムに移動させる行動リストを作る
     # AIの中心部
     def make_random(self, board):
-        # 1次元リストを２次元のndarrayに変換
-        points = np.array(board.tile_points)
-        colors = np.array(board.tile_color)
-        points = np.reshape(points, (board.height, board.width))
-        colors = np.reshape(colors, (board.height, board.width))
-
-        # エージェントの座標をndarrayに変換
-        agents = [[] for i in range(2)]
-        for (team, l) in zip(board.agents_list, agents):
-            for e in team:
-                l.append([e.x, e.y])
-        agents = np.array(agents)
-
         act_list = []
         for i in board.agents_list[0]:
             act = ActInfo(
@@ -57,6 +45,10 @@ class Solver():
                 random.choice(["move", "remove"])
             )
             act_list.append(act)
+
+
+        a = util.convertArray(board)
+        print(a[3])
         return act_list
 
     # デストラクタ
