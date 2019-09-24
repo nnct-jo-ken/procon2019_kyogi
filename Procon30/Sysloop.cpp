@@ -28,7 +28,7 @@ void game_loop(share_obj& share)
 			break;
 		}
 
-		if (share.update_turn[0].load() && share.update_turn[1].load())
+		if (share.update_turn[0].load() || share.update_turn[1].load())
 		{
 			for (int i = 0; i < 2; i++)
 			{
