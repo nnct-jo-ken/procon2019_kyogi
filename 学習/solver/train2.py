@@ -11,17 +11,30 @@ class QFunction(chainer.Chain):
     def __init__(self, obs_size, n_actions, n_hidden_channels=50):
         super().__init__()
         with self.init_scope():
-            self.l1 = L.Convolution2D(7, 32, ksize=3, stride=1,pad=1)
-            self.l2 = L.Convolution2D(32, 64, ksize=3, stride=1, pad=1)
-            self.l3 = L.Convolution2D(64, 64, ksize=3, stride=1, pad=1)
-            self.l4 = L.Linear(64*20*20, 1024)
-            self.out = L.Linear(1024, 17)
+            self.l1 = L.Convolution2D(7, 16, ksize=3, stride=1,pad=1)
+            self.l2 = L.Convolution2D(16, 16, ksize=3, stride=1, pad=1)
+            self.l3 = L.Convolution2D(16, 32, ksize=3, stride=1, pad=1)
+            self.l4 = L.Convolution2D(32, 32, ksize=3, stride=1, pad=1)
+            self.l5 = L.Convolution2D(32, 32, ksize=3, stride=1, pad=1)
+            self.l6 = L.Linear(32*5*5 + 1, 1024)
+            self.l7 = L.Linear(1024, 512)
+            self.l8 = L.Linear(512, 128)
+            self.out = L.Linear(128, 17)
     
     def __call__(self, x, test=False):
-        h = F.relu(self.l1(x))
+        h = F.relu(self.l1(x[1]))
         h = F.relu(self.l2(h))
+        h = F.max_pooling_2d(h, 2)
         h = F.relu(self.l3(h))
         h = F.relu(self.l4(h))
+        h = F.max_pooling_2d(h, 2)
+        h = F.relu(self.l5(h))
+        h = F.reshape(h, (h.shape[0], 32 * 5 * 5))
+        td = np.reshape(x[0].astype(np.float32), (x[0].size, 1))
+        h = F.concat([h, td])
+        h = F.relu(self.l6(h))
+        h = F.relu(self.l7(h))
+        h = F.relu(self.l8(h))
         h = self.out(h)
 
         return chainerrl.action_value.DiscreteActionValue(h)
@@ -44,7 +57,7 @@ replay_buffer = chainerrl.replay_buffer.ReplayBuffer(capacity=10 ** 6)
 
 gamma = 0.97
 
-phi = lambda x: x.astype(np.float32, copy=False)
+phi = lambda x: (x[0], x[1].astype(np.float32, copy=False))
 agent = chainerrl.agents.DQN(
     q_func, optimizer, replay_buffer, gamma, explorer,
     replay_start_size=100, update_interval=1,
@@ -52,24 +65,24 @@ agent = chainerrl.agents.DQN(
 
 log_path = "./loglog.log"
 
-n_episodes = 1000
-count = 0
-for i in range(n_episodes):
+n_episodes = 10000
+for i in range(1, n_episodes + 1):
     obs = env.reset()
-    reward = 0
+    reward = [0, 0]
     done = False
-    R = 0
     t = 0
+    print("episode num : ", i)
+
     while not done:
-        count += 1
-        print(count)
-        print(i)
-        action = agent.act_and_train(obs, reward)
+        start = time.time()
+        action = agent.act_and_train(obs, reward[0])
+        print(time.time() - start)
         obs, reward, done, _ = env.step(action)
-        R += reward
         t += 1
 
-    agent.stop_episode_and_train(obs, reward, done)
-    #agent.save("agent")
+    if i % 10 == 0:
+        agent.stop_episode_and_train(obs, reward[1], done=True)
+    if i % 50 == 0:
+        agent.save("agent")
     
 print('finishied')

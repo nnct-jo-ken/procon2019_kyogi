@@ -1,6 +1,7 @@
 .vs/
 Intermediate/
 Procon30/App/example/
+*.npz
 *.exe
 *.html
 *.pyc
