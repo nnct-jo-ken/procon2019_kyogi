@@ -74,9 +74,7 @@ for i in range(1, n_episodes + 1):
     print("episode num : ", i)
 
     while not done:
-        start = time.time()
         action = agent.act_and_train(obs, reward[0])
-        print(time.time() - start)
         obs, reward, done, _ = env.step(action)
         t += 1
 
