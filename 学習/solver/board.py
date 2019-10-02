@@ -20,10 +20,8 @@ class Board:
                 self.tile_points.append(points)
                 self.tile_color.append(color)
 
-        self.my_tile_score = teams[0]['tilePoint']
-        self.my_area_score = teams[0]['areaPoint']
-        self.enemy_tile_score = teams[1]['tilePoint']
-        self.enemy_area_score = teams[1]['areaPoint']
+        self.score = [[teams[0]['tilePoint'], teams[0]['areaPoint']],
+                      [teams[1]['tilePoint'], teams[1]['areaPoint']]]
 
         self.agents_list = [[] for i in range(2)]      # agents_list[0]が自チーム, agents_list[1]が敵チーム
 
@@ -35,8 +33,8 @@ class Board:
     def print(self):
         print("幅:%d 高さ:%d" % (self.width, self.height))
         print("残り%dターン\n各チームのエージェントの数%d体" % (self.turn, self.agents_count))
-        print("味方:タイルポイント%d点 エリアポイント%d点" % (self.my_tile_score, self.my_area_score))
-        print("敵:タイルポイント%d点 エリアポイント%d点" % (self.enemy_tile_score, self.enemy_area_score))
+        print("味方:タイルポイント%d点 エリアポイント%d点" % (self.score[0][0], self.score[0][1]))
+        print("敵:タイルポイント%d点 エリアポイント%d点" % (self.score[1][0], self.score[1][1]))
         print("\nタイルの点数", end="")
         for i, p in enumerate(self.tile_points):
             if i % self.width == 0:

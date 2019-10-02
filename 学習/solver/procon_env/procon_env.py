@@ -13,9 +13,6 @@ from actinfo import ActInfo
 from makeJson import make_json
 
 class ProconEnv(gym.Env):
-    area_score = []                                # 領域得点  [0] = 自チーム, [1]敵チーム
-    tile_score = []                                # タイル得点  [0] = 自チーム, [2]敵チーム
-    board = []
 
     def __init__(self):
         super().__init__()
@@ -31,6 +28,8 @@ class ProconEnv(gym.Env):
         )
         self.reward_range = [-5000, 5000]
         self.board = [[0] for i in range(2)]
+        self.agents_count = 0
+        self.tile_padding = np.zeros((20, 20), dtype=int)
 
     # 以下gymの実装する必要があるメソッド
     def _step(self, action):
@@ -40,39 +39,39 @@ class ProconEnv(gym.Env):
             for a in range(self.agents_count):
                 #(type, x, y)
                 tmp = 0
-                if action == 0:     # 停留
+                if action[i][a] == 0:     # 停留
                     tmp = (0, 0, 0)
-                elif action == 1:   # 移動
+                elif action[i][a] == 1:   # 移動
                     tmp = (1, 0, -1)
-                elif action == 2:
+                elif action[i][a] == 2:
                     tmp = (1, 1, -1)
-                elif action == 3:
+                elif action[i][a] == 3:
                     tmp = (1, 1, 0)
-                elif action == 4:
+                elif action[i][a] == 4:
                     tmp = (1, 1, 1)
-                elif action == 5:
+                elif action[i][a] == 5:
                     tmp = (1, 0, 1)
-                elif action == 6:
+                elif action[i][a] == 6:
                     tmp = (1, -1, 1)
-                elif action == 7:
+                elif action[i][a] == 7:
                     tmp = (1, -1, 0)
-                elif action == 8:
+                elif action[i][a] == 8:
                     tmp = (1, -1, -1)
-                elif action == 9:   #除去
+                elif action[i][a] == 9:   #除去
                     tmp = (2, 0, -1)
-                elif action == 10:
+                elif action[i][a] == 10:
                     tmp = (2, 1, -1)
-                elif action == 11:
+                elif action[i][a] == 11:
                     tmp = (2, 1, 0)
-                elif action == 12:
+                elif action[i][a] == 12:
                     tmp = (2, 1, 1)
-                elif action == 13:
+                elif action[i][a] == 13:
                     tmp = (2, 0, 1)
-                elif action == 14:
+                elif action[i][a] == 14:
                     tmp = (2, -1, 1)
-                elif action == 15:
+                elif action[i][a] == 15:
                     tmp = (2, -1, 0)
-                elif action == 16:
+                elif action[i][a] == 16:
                     tmp = (2, -1, -1)
 
                 # 行動させる
@@ -96,45 +95,42 @@ class ProconEnv(gym.Env):
         self.c[0].STEP()
 
         board = self.c[0].GET()
-        score_a = board.my_area_score + board.my_tile_score
-        score_b = board.enemy_tile_score + board.enemy_tile_score
+        total_score = [board.score[0][0] + board.score[0][1], board.score[1][0] + board.score[1][1]]
         AREA_BIAS = 100
-        short_reward = ((board.my_area_score - self.area_score[0]) * AREA_BIAS + (board.my_tile_score - self.tile_score[0])) - ((board.enemy_area_score  - self.area_score[1]) * AREA_BIAS + (board.enemy_tile_score - self.tile_score[1]))
+        score_tmp = np.array(board.score) - np.array(self.board[0].score)
+        short_reward = (score_tmp[0, 0] + score_tmp[0, 1] * AREA_BIAS) - (score_tmp[1, 0] + score_tmp[0, 1] * AREA_BIAS)
+
         reward = [[0]for i in range(2)]
         for i in range(2):
             short_reward = short_reward if i == 0 else -short_reward
-            final_reward = 1000 if score_a > score_b else -1000
-            for a in range(self.board.agents_count):
-                reward[i].append(
+            final_reward = 1000 if total_score[0] > total_score[1] else -1000
+            for a in range(self.agents_count):
+                reward[i].append([
                     -100 if board.agents_list[i][a].done_bad_act else short_reward,
                     final_reward if i == 0 else -final_reward
-                )
+                ])
 
         if self.board[0].turn <= 0:
             self.done = True
         else:
             self.done = False
         
-        observation = self._observe()
-
-        return [self.board[0].turn, observation], reward, self.done, {}
+        return self._observe(), reward, self.done, {}
 
 
     def _reset(self):
         self.c[0].RESET()
         for i in range(2):
             self.board[i] = self.c[i].GET()
-        self.agents_count = self.board.agents_count
-        return [self.board[0].turn, self._observe()]
+        self.agents_count = self.board[0].agents_count
+        self.tile_padding[:,:] = 0
+        self.tile_padding[:self.board[0].height, :self.board[0].width] = 1
+        return self._observe()
 
 
     def _render(self, mode='human', close=False):
         outfile = sys.stdout
-        outfile.write(
-            self.area_score[0] + ' ' +
-            self.area_score[1] + ' ' +
-            self.tile_score[0] + ' ' +
-            self.tile_score[1] + ' ')
+        outfile.write("no")
 
     def _close(self):
         pass
@@ -144,24 +140,35 @@ class ProconEnv(gym.Env):
 
     def _observe(self):
         # 観測環境を返す
-        return np.array([self.tile_padding,
+        obs = [[] for i in range(2)]
+
+        for i in range(2):
+            self.board[i] = self.c[i].GET()
+            util_data = util.convertArray(self.board[i])
+
+            for a in self.board[i].agents_list[0]:
+                my_pos = np.zeros((20, 20), dtype=int)
+                my_pos[a.y, a.x] = 1
+                a_obs = np.array([self.tile_padding,
+                                  util_data[0],     # tile_points
+                                  util_data[1],     # my_tiled
+                                  util_data[2],     # enemy_tiled
+                                  util_data[3],     # my_agents_pos
+                                  util_data[4],     # enemy_agents_pos
+                                  my_pos])
+
+                obs[i].append(a_obs)
+
+        return [self.board[0].turn, np.array(obs), self.board[0].agents_count]
+        
+        """return np.array([self.tile_padding,
                          self.tile_points, 
                          self.my_tiled, 
                          self.enemy_tiled, 
                          self.my_agents_pos, 
                          self.enemy_agents_pos,
                          self.my_pos])
-        
-    def _update_observe(self):
-        for i in range(2):
-            self.board[i] = self.c[i].GET()
-
-            util_data = util.convertArray(self.board[i])
-            
-            for a in range(self.board[0].agents_count):
-                
-                
-
+                         
         tmp = util.convertArray(self.board)
         self.tile_points = tmp[0]
         self.my_tiled = tmp[1]
@@ -172,4 +179,4 @@ class ProconEnv(gym.Env):
         a = self.board.agents_list[0][self.my_index]
         self.my_pos[a.y][a.x] = 1
         self.area_score = [self.board.my_area_score, self.board.enemy_area_score]
-        self.tile_score = [self.board.my_tile_score, self.board.enemy_tile_score]
+        self.tile_score = [self.board.my_tile_score, self.board.enemy_tile_score]"""

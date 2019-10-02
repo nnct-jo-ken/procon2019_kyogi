@@ -57,30 +57,44 @@ replay_buffer = chainerrl.replay_buffer.ReplayBuffer(capacity=10 ** 6)
 
 gamma = 0.97
 
-phi = lambda x: (x[0], x[1].astype(np.float32, copy=False))
-agent = chainerrl.agents.DQN(
+phi = lambda x: (x[0], x[1][0].astype(np.float32, copy=False), x[2])
+phi2 = lambda x: (x[0], x[1][1].astype(np.float32, copy=False), x[2])
+
+agent = []
+
+agent.append(chainerrl.agents.DQN(
     q_func, optimizer, replay_buffer, gamma, explorer,
     replay_start_size=100, update_interval=1,
-    target_update_interval=50, phi=phi)
+    target_update_interval=50, phi=phi))
+
+agent.append(chainerrl.agents.DQN(
+    q_func, optimizer, replay_buffer, gamma, explorer,
+    replay_start_size=100, update_interval=1,
+    target_update_interval=50, phi=phi2))
 
 log_path = "./loglog.log"
 
 n_episodes = 10000
 for i in range(1, n_episodes + 1):
     obs = env.reset()
-    reward = [0, 0]
+    reward = [[0 for i in range(2)]for j in range(2)]
     done = False
     t = 0
     print("episode num : ", i)
 
     while not done:
-        action = agent.act_and_train(obs, reward[0])
+        action = [[]for i in range(2)]
+        for i in range(2):
+            for a in range(obs[2]):
+                action[i].append(agent[i].act_and_train((obs[0], obs[1][i], a), reward[i][0]))
+
         obs, reward, done, _ = env.step(action)
         t += 1
 
     if i % 10 == 0:
-        agent.stop_episode_and_train(obs, reward[1], done=True)
+        for i in range(2):
+            agent[i].stop_episode_and_train(obs, reward[i][1], done=True)
     if i % 50 == 0:
-        agent.save("agent")
+        agent[0].save("agent")
     
 print('finishied')
