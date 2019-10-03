@@ -131,7 +131,7 @@ class ProconEnv(gym.Env):
             self.but_act_rate.append(self.but_act_count / self.act_count)
             if len(self.but_act_rate) % 100 == 0:
                 with open('BA_rate.txt', 'w') as f:
-                    f.write(self.but_act_rate)
+                    f.write(str(self.but_act_rate))
         self.c[0].RESET()
         for i in range(2):
             self.board[i] = self.c[i].GET()
