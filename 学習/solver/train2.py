@@ -47,11 +47,12 @@ obs_size = env.observation_space.shape[0] * env.observation_space.shape[1] * env
 n_actions = env.action_space.n
 q_func = QFunction(obs_size, n_actions)
 q_func.to_gpu(0)
-optimizer = chainer.optimizers.Adam(eps=1e-2)
+optimizer = chainer.optimizers.Adam(eps=0.002)
 optimizer.setup(q_func)
 
-explorer = chainerrl.explorers.ConstantEpsilonGreedy(
-    epsilon = 0.3, random_action_func=env.action_space.sample)
+n_episodes = 10000
+explorer = chainerrl.explorers.LinearDecayEpsilonGreedy(
+    start_epsilon = 1.0 ,end_epsilon = 0.1, decay_steps=n_episodes / 10, random_action_func=env.action_space.sample)
 
 replay_buffer = chainerrl.replay_buffer.ReplayBuffer(capacity=10 ** 6)
 
@@ -74,19 +75,18 @@ agent.append(chainerrl.agents.DQN(
 
 log_path = "./loglog.log"
 
-n_episodes = 10000
 for i in range(1, n_episodes + 1):
     obs = env.reset()
-    reward = [[0 for i in range(2)]for j in range(2)]
+    reward = np.zeros((2, 2), dtype=int)
     done = False
     t = 0
     print("episode num : ", i)
 
     while not done:
-        action = [[]for i in range(2)]
+        action = np.zeros((2, obs[2]), dtype=int)
         for i in range(2):
             for a in range(obs[2]):
-                action[i].append(agent[i].act_and_train((obs[0], obs[1][i], a), reward[i][0]))
+                action[i][a] = agent[i].act_and_train((obs[0], obs[1][i], a), reward[i][0])
 
         obs, reward, done, _ = env.step(action)
         t += 1

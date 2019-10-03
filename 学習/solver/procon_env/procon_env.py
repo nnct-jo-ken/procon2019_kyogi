@@ -26,15 +26,19 @@ class ProconEnv(gym.Env):
             high = 1,
             shape = (7, 20, 20)
         )
-        self.reward_range = [-5000, 5000]
-        self.board = [[0] for i in range(2)]
+        self.board = [0, 0]
         self.agents_count = 0
         self.tile_padding = np.zeros((20, 20), dtype=int)
+        self.but_act_count = 0
+        self.act_count = 0
+        self.but_act_rate = []
 
     # 以下gymの実装する必要があるメソッド
     def _step(self, action):
+        #print(action.shape)
         act_list = []
         for i in range(2):
+
             act = []
             for a in range(self.agents_count):
                 #(type, x, y)
@@ -100,15 +104,18 @@ class ProconEnv(gym.Env):
         score_tmp = np.array(board.score) - np.array(self.board[0].score)
         short_reward = (score_tmp[0, 0] + score_tmp[0, 1] * AREA_BIAS) - (score_tmp[1, 0] + score_tmp[0, 1] * AREA_BIAS)
 
-        reward = [[0]for i in range(2)]
+        reward = np.zeros((2, 2), dtype=int)
         for i in range(2):
             short_reward = short_reward if i == 0 else -short_reward
             final_reward = 1000 if total_score[0] > total_score[1] else -1000
             for a in range(self.agents_count):
-                reward[i].append([
-                    -100 if board.agents_list[i][a].done_bad_act else short_reward,
-                    final_reward if i == 0 else -final_reward
-                ])
+                # エージェントの行動率調査
+                self.act_count += 1
+                if board.agents_list[i][a].done_bad_act:
+                    self.but_act_count += 1
+
+                reward[i] = np.array([-100 if board.agents_list[i][a].done_bad_act else short_reward,
+                                      final_reward if i == 0 else -final_reward])
 
         if self.board[0].turn <= 0:
             self.done = True
@@ -119,6 +126,12 @@ class ProconEnv(gym.Env):
 
 
     def _reset(self):
+        # 学習率調査
+        if self.act_count != 0:
+            self.but_act_rate.append(self.but_act_count / self.act_count)
+            if len(self.but_act_rate) % 100 == 0:
+                with open('BA_rate.txt', 'w') as f:
+                    f.write(self.but_act_rate)
         self.c[0].RESET()
         for i in range(2):
             self.board[i] = self.c[i].GET()

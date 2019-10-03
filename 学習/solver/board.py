@@ -1,4 +1,5 @@
 import json
+import numpy as np
 # 自作モジュール
 from agent import Agent
 
@@ -12,22 +13,22 @@ class Board:
         self.turn = json_dic['turn']                    # 残りターン数
         self.agents_count = json_dic['agentCount']      # 1チームありのエージェント数
 
-        self.tile_points = []
-        self.tile_color = []
-
-        for points_list, color_list in zip(json_dic['points'], json_dic['tiled']):
-            for points, color in zip(points_list, color_list):
-                self.tile_points.append(points)
-                self.tile_color.append(color)
-
-        self.score = [[teams[0]['tilePoint'], teams[0]['areaPoint']],
-                      [teams[1]['tilePoint'], teams[1]['areaPoint']]]
+        self.tile_points = np.asarray(json_dic['points'])
+        self.tile_color = np.asarray(json_dic['tiled'])
+        
+        self.score = np.array([[teams[0]['tilePoint'], teams[0]['areaPoint']],
+                               [teams[1]['tilePoint'], teams[1]['areaPoint']]])
 
         self.agents_list = [[] for i in range(2)]      # agents_list[0]が自チーム, agents_list[1]が敵チーム
 
+        self.agents_pos = np.zeros((2, self.agents_count, 2), dtype=int)
+
         for i, l in enumerate(self.agents_list):
-            for e in teams[i]['agents']:
+            for j, e in enumerate(teams[i]['agents']):
                 l.append(Agent(e['agentID'], e['x'], e['y'], i + 1, e['butting'], e['badAct']))
+                self.agents_pos[i][j] = np.array([e['x'], e['y']])
+
+        self.agents_pos = np.array([self.agents_pos[0].T, self.agents_pos[1].T])
 
     # デバッグ用　盤面の情報を表示する
     def print(self):

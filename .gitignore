@@ -6,3 +6,5 @@ Procon30/App/example/
 *.html
 *.pyc
 *.log
+*.stats
+*.txt

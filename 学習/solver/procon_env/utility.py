@@ -5,37 +5,19 @@ sys.path.append('../')
 from board import Board
 
 # 行列を20x20に直す
-def resizeArray(array):
-    r = np.zeros((20, 20), dtype=int)
-    for y in range(array.shape[0]):
-        for x in range(array.shape[1]):
-            r[y, x] = array[y, x]
-    
-    return r
+def resizeArray(np_array):
+    size = np_array.shape
+    return np.pad(np_array, [(0, 20 - size[0]), (0, 20 - size[1])], 'constant')
 
 # (タイルポイント、タイル状況、エージェント座標リスト)のタプルを返す
 def convertArray(board):
-    # 1次元リストを２次元のndarrayに変換
-    points = np.array(board.tile_points)
-    colors = np.array(board.tile_color)
-    points = np.reshape(points, (board.height, board.width))
-    colors = np.reshape(colors, (board.height, board.width))
     # エージェントの座標をndarrayに変換
-    agents = [[] for i in range(2)]
-    for (team, l) in zip(board.agents_list, agents):
-        for e in team:
-            l.append([e.x, e.y])
-    agents = np.array(agents)
-    
-    my_agents = np.zeros((20, 20), dtype=int)
-    enemy_agents = np.zeros((20, 20), dtype = int)
+    pos_tmp = np.zeros((2, 20, 20), dtype=int)
+    for i in range(2):
+        pos_tmp[i][board.agents_pos[i][1], board.agents_pos[i][0]] = 1
 
-    for i, j in zip(agents[0], agents[1]):
-        my_agents[i[1], i[0]] = 1
-        enemy_agents[j[1], j[0]] = 1
-
-    points = resizeArray(points)
-    colors = resizeArray(colors)
+    points = resizeArray(board.tile_points)
+    colors = resizeArray(board.tile_color)
     my_tiled = 1 * (colors == 1)
     enemy_tiled = 1 * (colors == 2)
-    return (points, my_tiled, enemy_tiled, my_agents, enemy_agents)
+    return (points, my_tiled, enemy_tiled, pos_tmp[0], pos_tmp[1])
