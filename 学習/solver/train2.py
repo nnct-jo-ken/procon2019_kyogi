@@ -85,11 +85,10 @@ for i in range(1, n_episodes + 1):
     print("episode num : ", i)
 
     while not done:
-        action = np.zeros((2, obs[2]), dtype=int)
+        action = np.zeros((2, obs[2]), dtype=np.uint8)
         for i in range(2):
             for a in range(obs[2]):
                 action[i][a] = agent[i].act_and_train((obs[0], obs[1][i], a), reward[i][0])
-
         obs, reward, done, _ = env.step(action)
         t += 1
 

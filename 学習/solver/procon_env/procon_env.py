@@ -1,7 +1,6 @@
 import gym
 import numpy as np
 import gym.spaces
-import procon_env.utility as util
 import socket
 import time
 
@@ -20,7 +19,7 @@ class ProconEnv(gym.Env):
         self.c = [Connector(7755), Connector(7756)]
 
         # ８方向　移動、削除、停留
-        self.action_space = gym.spaces.Discrete(17) 
+        self.action_space = gym.spaces.Discrete(16) 
         self.observation_space = gym.spaces.Box(        # ここ怪しい
             low = 0,
             high = 1,
@@ -31,7 +30,7 @@ class ProconEnv(gym.Env):
         self.tile_padding = np.zeros((20, 20), dtype=int)
         self.but_act_count = 0
         self.act_count = 0
-        self.but_act_rate = []
+        self.but_act_rate = [0, 0]
 
     # 以下gymの実装する必要があるメソッド
     def _step(self, action):
@@ -43,39 +42,38 @@ class ProconEnv(gym.Env):
             for a in range(self.agents_count):
                 #(type, x, y)
                 tmp = 0
-                if action[i][a] == 0:     # 停留
-                    tmp = (0, 0, 0)
-                elif action[i][a] == 1:   # 移動
+                #停留はしない
+                if action[i][a] == 0:   # 移動
                     tmp = (1, 0, -1)
-                elif action[i][a] == 2:
+                elif action[i][a] == 1:
                     tmp = (1, 1, -1)
-                elif action[i][a] == 3:
+                elif action[i][a] == 2:
                     tmp = (1, 1, 0)
-                elif action[i][a] == 4:
+                elif action[i][a] == 3:
                     tmp = (1, 1, 1)
-                elif action[i][a] == 5:
+                elif action[i][a] == 4:
                     tmp = (1, 0, 1)
-                elif action[i][a] == 6:
+                elif action[i][a] == 5:
                     tmp = (1, -1, 1)
-                elif action[i][a] == 7:
+                elif action[i][a] == 6:
                     tmp = (1, -1, 0)
-                elif action[i][a] == 8:
+                elif action[i][a] == 7:
                     tmp = (1, -1, -1)
-                elif action[i][a] == 9:   #除去
+                elif action[i][a] == 8:   #除去
                     tmp = (2, 0, -1)
-                elif action[i][a] == 10:
+                elif action[i][a] == 9:
                     tmp = (2, 1, -1)
-                elif action[i][a] == 11:
+                elif action[i][a] == 10:
                     tmp = (2, 1, 0)
-                elif action[i][a] == 12:
+                elif action[i][a] == 11:
                     tmp = (2, 1, 1)
-                elif action[i][a] == 13:
+                elif action[i][a] == 12:
                     tmp = (2, 0, 1)
-                elif action[i][a] == 14:
+                elif action[i][a] == 13:
                     tmp = (2, -1, 1)
-                elif action[i][a] == 15:
+                elif action[i][a] == 14:
                     tmp = (2, -1, 0)
-                elif action[i][a] == 16:
+                elif action[i][a] == 15:
                     tmp = (2, -1, -1)
 
                 # 行動させる
@@ -136,7 +134,7 @@ class ProconEnv(gym.Env):
         for i in range(2):
             self.board[i] = self.c[i].GET()
         self.agents_count = self.board[0].agents_count
-        self.tile_padding[:,:] = 0
+        self.tile_padding = np.zeros((20, 20), dtype=int)
         self.tile_padding[:self.board[0].height, :self.board[0].width] = 1
         return self._observe()
 
@@ -153,43 +151,39 @@ class ProconEnv(gym.Env):
 
     def _observe(self):
         # 観測環境を返す
-        obs = [[] for i in range(2)]
-
+        obs = []
         for i in range(2):
             self.board[i] = self.c[i].GET()
-            util_data = util.convertArray(self.board[i])
+            pos_tmp = np.zeros((2, 20, 20), dtype=int)
+            # エージェントの座標を行列に
+            for i in range(2):
+                pos_tmp[i][self.board[i].agents_pos[i][1], self.board[i].agents_pos[i][0]] = 1
 
-            for a in self.board[i].agents_list[0]:
+            width, height = self.board[i].width, self.board[i].height
+            # 得点
+            points = np.pad(self.board[i].tile_points, [(0, 20 - height), (0, 20 - width)], 'constant')
+            # 色
+            colors = np.pad(self.board[i].tile_color, [(0, 20 - height), (0, 20 - width)], 'constant')
+            util_data = [
+                points,
+                1 * (colors == 1),
+                2 * (colors == 2),
+                pos_tmp[0],
+                pos_tmp[1]
+            ]
+
+            team_obs = []
+            for a in self.board[0].agents_list[0]:
                 my_pos = np.zeros((20, 20), dtype=int)
                 my_pos[a.y, a.x] = 1
                 a_obs = np.array([self.tile_padding,
-                                  util_data[0],     # tile_points
-                                  util_data[1],     # my_tiled
-                                  util_data[2],     # enemy_tiled
-                                  util_data[3],     # my_agents_pos
-                                  util_data[4],     # enemy_agents_pos
-                                  my_pos])
+                        util_data[0],     # tile_points
+                        util_data[1],     # my_tiled
+                        util_data[2],     # enemy_tiled
+                        util_data[3],     # my_agents_pos
+                        util_data[4],     # enemy_agents_pos
+                        my_pos])
 
-                obs[i].append(a_obs)
-
+                team_obs.append(a_obs)
+            obs.append(team_obs)    
         return [self.board[0].turn, np.array(obs), self.board[0].agents_count]
-        
-        """return np.array([self.tile_padding,
-                         self.tile_points, 
-                         self.my_tiled, 
-                         self.enemy_tiled, 
-                         self.my_agents_pos, 
-                         self.enemy_agents_pos,
-                         self.my_pos])
-                         
-        tmp = util.convertArray(self.board)
-        self.tile_points = tmp[0]
-        self.my_tiled = tmp[1]
-        self.enemy_tiled = tmp[2]
-        self.my_agents_pos = tmp[3]
-        self.enemy_agents_pos = tmp[4]
-        self.my_pos = np.zeros_like(self.my_pos)
-        a = self.board.agents_list[0][self.my_index]
-        self.my_pos[a.y][a.x] = 1
-        self.area_score = [self.board.my_area_score, self.board.enemy_area_score]
-        self.tile_score = [self.board.my_tile_score, self.board.enemy_tile_score]"""
