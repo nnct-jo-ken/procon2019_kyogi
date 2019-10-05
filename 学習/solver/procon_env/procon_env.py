@@ -18,12 +18,12 @@ class ProconEnv(gym.Env):
 
         self.c = [Connector(7755), Connector(7756)]
 
-        # ８方向　移動、削除、停留
+        # ８方向　移動、削除
         self.action_space = gym.spaces.Discrete(16) 
         self.observation_space = gym.spaces.Box(        # ここ怪しい
             low = 0,
             high = 1,
-            shape = (7, 20, 20)
+            shape = (2, 6, 20, 20)
         )
         self.board = [0, 0]
         self.agents_count = 0
@@ -151,7 +151,8 @@ class ProconEnv(gym.Env):
 
     def _observe(self):
         # 観測環境を返す
-        obs = []
+        common_obs = []
+        personal_obs = []
         for i in range(2):
             self.board[i] = self.c[i].GET()
             pos_tmp = np.zeros((2, 20, 20), dtype=int)
@@ -172,18 +173,24 @@ class ProconEnv(gym.Env):
                 pos_tmp[1]
             ]
 
-            team_obs = []
-            for a in self.board[0].agents_list[0]:
-                my_pos = np.zeros((20, 20), dtype=int)
-                my_pos[a.y, a.x] = 1
-                a_obs = np.array([self.tile_padding,
-                        util_data[0],     # tile_points
+            team_obs = np.array([self.tile_padding,
+                        util_data[0] / 16,     # tile_points
                         util_data[1],     # my_tiled
                         util_data[2],     # enemy_tiled
                         util_data[3],     # my_agents_pos
                         util_data[4],     # enemy_agents_pos
-                        my_pos])
+                        ])
+            team_personal_obs = []
+            for a in self.board[0].agents_list[0]:
+                my_pos = np.zeros((20, 20), dtype=int)
+                my_pos[a.y, a.x] = 1
+                rule = np.zeros((20, 20), dtype=int)
+                rule[a.y - 1 if a.y - 1 > 0 else 0 : a.y + 2 if a.y + 2 < 20 else 20, a.x - 1 if a.x - 1 > 0 else 0  : a.x + 2 if a.x + 2  < 20 else 20] = 1
+                rule[a.y, a.x] = 0
+                rule_move = 1 * rule * ((colors == 0) + (colors == 1))
+                rule_delete = 1 * rule * ((colors == 1) + (colors == 2))
+                team_personal_obs.append([my_pos, rule, rule_move, rule_delete])
 
-                team_obs.append(a_obs)
-            obs.append(team_obs)    
-        return [self.board[0].turn, np.array(obs), self.board[0].agents_count]
+            common_obs.append(team_obs)
+            personal_obs.append(team_personal_obs)
+        return [np.array(common_obs), np.array(personal_obs), self.board[0].turn, self.board[0].agents_count]
