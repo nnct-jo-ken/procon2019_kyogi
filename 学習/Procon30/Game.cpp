@@ -1,40 +1,20 @@
 #include "Game.h"
 
-int Game::getTileScore(int index)
-{
-	return board.tile_points[index];
-}
+int Game::getTileScore(int index) { return board.tile_points[index]; }
 
-int Game::getTileScore(Vector2 pos)
-{
-	return board.tile_points[pos.y * board.width + pos.x];
-}
+int Game::getTileScore(Vector2 pos) { return board.tile_points[pos.y * board.width + pos.x]; }
 
-int Game::getTileState(int index)
-{
-	return board.tile_color[index];
-}
+int Game::getTileState(int index) { return board.tile_color[index]; }
 
-int Game::getTileState(Vector2 pos) {
-	return board.tile_color[pos.y * board.width + pos.x];
-}
+int Game::getTileState(Vector2 pos) { return board.tile_color[pos.y * board.width + pos.x]; }
 
-int Game::getTurn() {
-	return board.turn;
-}
+int Game::getTurn() { return board.turn; }
 
-int Game::getNowTurn() {
-	return board.now_turn;
-}
+int Game::getNowTurn() { return board.now_turn; }
 
-int Game::getAgentQant()
-{
-	return board.agents_count;
-}
+int Game::getAgentQant() { return board.agents_count; }
 
-std::vector<Agent>& Game::getAgentVector() {
-	return board.agents;
-}
+std::vector<Agent>& Game::getAgentVector() { return board.agents; }
 
 void Game::init() 
 {

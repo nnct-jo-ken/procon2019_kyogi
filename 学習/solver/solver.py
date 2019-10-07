@@ -1,7 +1,6 @@
 import socket
 import random
 import numpy as np
-import procon_env.utility as util
 
 # 自作モジュール
 import connection
@@ -13,6 +12,7 @@ class Solver():
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect(("127.0.0.1", port))
         self.pre_turn = -1
+        self.is_update = True if port == 7755 else False
         
     def run(self):
         # 受信
@@ -20,7 +20,8 @@ class Solver():
 
         # ターンが0以下になったら新規ゲームを要求する
         if board.turn <= 0:
-            connection.send_new(self.sock)
+            if self.is_update:
+                connection.send_new(self.sock)
             return
 
         if board.turn != self.pre_turn:
@@ -32,6 +33,8 @@ class Solver():
 
             # 送信
             connection.send_act(self.sock, strs)
+            if not self.is_update:
+                connection.send_update(self.sock)
 
     # エージェントをランダムに移動させる行動リストを作る
     # AIの中心部
@@ -46,9 +49,6 @@ class Solver():
             )
             act_list.append(act)
 
-
-        a = util.convertArray(board)
-        print(a[3])
         return act_list
 
     # デストラクタ
