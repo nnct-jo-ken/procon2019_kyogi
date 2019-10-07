@@ -35,7 +35,7 @@ void game_loop(share_obj& share)
 				share.update_turn[i].store(false, std::memory_order_seq_cst);
 			}
 			share.mtx.lock();
-			share.game.updateTurn();
+			share.game.updateTurn(share.game.board);
 			share.mtx.unlock();
 
 			// gui
@@ -67,7 +67,7 @@ void server_loop(share_obj& share, Server& server)
 				break;
 			case CONNECT:
 				share.mtx.lock();
-				server.wait_cmd(share.game.getBoardState(), i, share.restart[i], share.update_turn[i]);
+				server.wait_cmd(share.game.board, i, share.restart[i], share.update_turn[i]);
 				share.mtx.unlock();
 				break;
 			case WAIT:
@@ -95,7 +95,7 @@ void render_loop(share_obj& share, Renderer& renderer)
 			share.restart_gui.store(false, std::memory_order_seq_cst);
 			share.mtx.lock();
 			renderer.clear();
-			renderer.init(share.game.getBoardState());
+			renderer.init(share.game.board);
 			share.mtx.unlock();
 		}
 
@@ -103,7 +103,7 @@ void render_loop(share_obj& share, Renderer& renderer)
 		{
 			share.update_gui.store(false, std::memory_order_seq_cst);
 			share.mtx.lock();
-			renderer.updateTurn(share.game.getBoardState());
+			renderer.updateTurn(share.game.board);
 			share.mtx.unlock();
 		}
 
@@ -116,7 +116,7 @@ void render_loop(share_obj& share, Renderer& renderer)
 		}
 
 		share.mtx.lock();
-		renderer.update(share.game.getAgentVector());
+		renderer.update(share.game.board.agents);
 		share.mtx.unlock();
 	}
 }

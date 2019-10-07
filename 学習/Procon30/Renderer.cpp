@@ -23,8 +23,8 @@ void Renderer::init(BOARD_STATE board) {
 	initrInfo();
 	render_board = board;
 	for (int i = 0; i < board.agents_count * 2; i++) {
-		Vector2 pos = board.agents[i].getPos();
-		ragents.push_back(RAgent(board.agents[i].getTeam(), board.agents[i].getID(), i, Point(pos.x, pos.y), rInfo));
+		Vector2 pos = board.agents[i].pos;
+		ragents.push_back(RAgent(board.agents[i].team, board.agents[i].ID, i, Point(pos.x, pos.y), rInfo));
 	}
 
 	for (int i = 0; i < board.width * board.height; i++) {
@@ -58,7 +58,7 @@ void Renderer::update(std::vector<Agent>& agents){
 	for (RAgent &a : ragents) {
 		a.draw(rInfo);
 		OPERATION_STATE ostate;
-		switch (agents[i].getActType())
+		switch (agents[i].act_type)
 		{
 		case 0:
 			ostate = NONE;
@@ -73,7 +73,7 @@ void Renderer::update(std::vector<Agent>& agents){
 			ostate = NONE;
 			break;
 		}
-		a.update_targetPos(Point(agents[i].getTarget().x, agents[i].getTarget().y), ostate);
+		a.update_targetPos(Point(agents[i].pos.x + agents[i].delta_pos.x, agents[i].pos.y + agents[i].delta_pos.y), ostate);
 		i++;
 	}
 
@@ -107,7 +107,7 @@ void Renderer::updateTurn(BOARD_STATE board) {
 
 	i = 0;
 	for (RAgent& a : ragents) {
-		Vector2 posMyVec2 = board.agents[i].getPos();
+		Vector2 posMyVec2 = board.agents[i].pos;
 		Point pos(posMyVec2.x, posMyVec2.y);
 		a.update(pos, rInfo);
 		i++;

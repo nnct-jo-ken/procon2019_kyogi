@@ -45,35 +45,21 @@ struct ACT_STATE {
 
 class Game {
 private:
-	BOARD_STATE board;
-	int getAreaScore(int team);
-	void areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, int& tmp, bool& reach_end);
 	void parse_json(std::string str_json);
 	std::string getJsonFromServer();
 
 public:
+	BOARD_STATE board;
+
 	void init();
 	void clear();
-
-	void setAct(int team, int num, int act, Vector2 delta_pos);
-	void setTileState(Vector2 pos, int _team);
 	void load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx);
 
-	BOARD_STATE getBoardState();
-	GAME_SCORE getGameScore();
-	int getWidth();
-	int getHeight();
-	int getVectorSize();
-	int getTileScore(int index);
-	int getTileScore(Vector2 pos);
-	int getTileState(int index);
-	int getTileState(Vector2 pos);
-	int getTurn();
-	int getNowTurn();
-	int getAgentQant();
+	static bool updateTurn(BOARD_STATE& _board);				// ターンを移す 試合が終わったらtrueを返す
+	static void setAct(int team, int num, int act, Vector2 delta_pos, BOARD_STATE& _board);
+	static GAME_SCORE countGameScore(BOARD_STATE& _board);	// 得点計算
 
-	std::vector<Agent>& getAgentVector();
+	static int getAreaScore(int team, BOARD_STATE& _board);
+	static void areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, int& tmp, bool& reach_end, BOARD_STATE& _board);
 
-	bool updateTurn();				// ターンを移す 試合が終わったらtrueを返す
-	GAME_SCORE countGameScore();	// 得点計算
 };

@@ -1,21 +1,5 @@
 #include "Game.h"
 
-int Game::getTileScore(int index) { return board.tile_points[index]; }
-
-int Game::getTileScore(Vector2 pos) { return board.tile_points[pos.y * board.width + pos.x]; }
-
-int Game::getTileState(int index) { return board.tile_color[index]; }
-
-int Game::getTileState(Vector2 pos) { return board.tile_color[pos.y * board.width + pos.x]; }
-
-int Game::getTurn() { return board.turn; }
-
-int Game::getNowTurn() { return board.now_turn; }
-
-int Game::getAgentQant() { return board.agents_count; }
-
-std::vector<Agent>& Game::getAgentVector() { return board.agents; }
-
 void Game::init() 
 {
 	std::thread py_server([] {system("python ../Board_Generator.py"); });
@@ -28,7 +12,7 @@ void Game::init()
 	board.team_ID = 1;
 	parse_json(strs);
 
-	board.game_score = countGameScore();
+	board.game_score = countGameScore(board);
 }
 
 std::string Game::getJsonFromServer() 
@@ -131,36 +115,12 @@ void Game::parse_json(std::string json_str)
 	}
 }
 
-BOARD_STATE Game::getBoardState() {
-	return board;
-}
-
-GAME_SCORE Game::getGameScore()
-{
-	return board.game_score;
-}
-
-int Game::getWidth()
-{
-	return board.width;
-}
-
-int Game::getHeight()
-{
-	return board.height;
-}
-
-int Game::getVectorSize()
-{
-	return (int)board.tile_points.size();
-}
-
-void Game::setAct(int team, int num, int act, Vector2 step) {
+void Game::setAct(int team, int num, int act, Vector2 step, BOARD_STATE& _board) {
 	if (team != 1 && team != 2) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	if (num < 0 || num <= board.agents_count) {
+	if (num < 0 || num <= _board.agents_count) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
@@ -172,16 +132,9 @@ void Game::setAct(int team, int num, int act, Vector2 step) {
 		throw std::invalid_argument("Game::setStep() exception.");
 	}
 
-	Agent& tmp = board.agents[(team - 1) * board.agents_count + num];
-	tmp.setActType(act);
-	tmp.setDeltaMove(tmp.getPos() + step);
-}
-
-void Game::setTileState(Vector2 pos, int _team) {
-	if (_team != 1 && _team != 2) {
-		throw std::invalid_argument("Game::setTileState() exception.");
-	}
-	board.tile_color[pos.y * board.width + pos.x] = _team;
+	Agent& tmp = _board.agents[(team - 1) * _board.agents_count + num];
+	tmp.act_type = act;
+	tmp.delta_pos = tmp.pos + step;
 }
 
 void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
@@ -192,10 +145,10 @@ void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
 		ACT_STATE tmp = queue.front();
 		for (Agent& a : board.agents)
 		{
-			if (a.getID() == tmp.agent_id)
+			if (a.ID == tmp.agent_id)
 			{
-				a.setDeltaMove(Vector2(tmp.dx, tmp.dy));
-				a.setActType(tmp.type);
+				a.delta_pos = Vector2(tmp.dx, tmp.dy);
+				a.act_type = tmp.type;
 			}
 		}
 		queue.pop();
@@ -204,15 +157,15 @@ void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
 	mtx.unlock();
 }
 
-bool Game::updateTurn() 
+bool Game::updateTurn(BOARD_STATE& _board)
 {
 
 	// 最初から停留だったエージェントを調べておく
 	// この関数の最後にこれらのエージェントはバッティングを起こさなかったことにする
 	std::vector<bool> was_stay;
-	for (Agent a : board.agents)
+	for (Agent a : _board.agents)
 	{
-		if (a.getActType() == 0)
+		if (a.act_type == 0)
 		{
 			was_stay.push_back(true);
 		}
@@ -223,40 +176,43 @@ bool Game::updateTurn()
 	}
 
 	// バッティングと不正の記録のリセット
-	for (Agent& a : board.agents)
+	for (Agent& a : _board.agents)
 	{
-		a.setButting(false);
-		a.setBadAct(false);
+		a.done_butting = false;
+		a.done_bad_act = false;
 	}
 
 	// エージェントの移動先が盤面の範囲内かを調べる
-	for (Agent& a : board.agents) 
+	for (Agent& a : _board.agents) 
 	{
-		Vector2 t_pos = a.getTarget();
-		if (t_pos.x < 0 || t_pos.y < 0 || t_pos.x >= board.width || t_pos.y >= board.height) {
+		Vector2 t_pos = a.pos + a.delta_pos;
+
+		if (t_pos.x < 0 || t_pos.y < 0 || t_pos.x >= _board.width || t_pos.y >= _board.height) {
 			a.resetAct();
 			// 不正として処理
-			a.setBadAct(true);
+			a.done_bad_act = true;
 		}
 	}
 
 	// 移動先のタイルと自身の色を比較して移動か削除かを決める（不正チェック）
-	for (Agent& a : board.agents) {
-		switch (a.getActType())
+	for (Agent& a : _board.agents) {
+		int _pos_x = a.pos.x + a.delta_pos.x;
+		int _pos_y = a.pos.y + a.delta_pos.y;
+		switch (a.act_type)
 		{
 		case 0:
 			a.resetAct();
-			a.setBadAct(true);
+			a.done_bad_act = true;
 			break;
 		case 1:
-			if (getTileState(a.getTarget()) != 0 && getTileState(a.getTarget()) != a.getTeam()) {
-				a.setBadAct(true);
+			if (_board.tile_color[_pos_y * _board.width + _pos_x] != 0 && _board.tile_color[_pos_y * _board.width + _pos_x] != a.team) {
+				a.done_bad_act = true;
 				a.resetAct();
 			}
 			break;
 		case 2:
-			if (getTileState(a.getTarget()) == 0) {
-				a.setBadAct(true);
+			if (_board.tile_color[_pos_y * _board.width + _pos_x] == 0) {
+				a.done_bad_act = true;
 				a.resetAct();
 			}
 			break;
@@ -265,56 +221,56 @@ bool Game::updateTurn()
 
 	// バッティングを調べる
 	std::vector<bool> buttingTable; // 過去にバッティングが起こったかを記録しておく
-	for (int i = 0; i < board.width * board.height; i++) {
+	for (int i = 0; i < _board.width * _board.height; i++) {
 		buttingTable.push_back(false);
 	}
 	bool inCheck = true;
 	while (inCheck) {
 		// エージェントの行動の変化がなくなるまで調べる
 		inCheck = false;
-		for (int i = 0; i < board.agents_count * 2 - 1; i++) {
-			for (int i2 = i + 1; i2 < board.agents_count * 2; i2++) {
-				Vector2 checkingPos1 = board.agents[i].getTarget();
-				Vector2 checkingPos2 = board.agents[i2].getTarget();
-				if (board.agents[i].getTarget() == board.agents[i2].getTarget()) {
-					buttingTable[checkingPos1.y * board.width + checkingPos1.x] = true;
-					board.agents[i].resetAct();
-					board.agents[i2].resetAct();
-					board.agents[i].setButting(true);
-					board.agents[i2].setButting(true);
+		for (int i = 0; i < _board.agents_count * 2 - 1; i++) {
+			for (int i2 = i + 1; i2 < _board.agents_count * 2; i2++) {
+				Vector2 checkingPos1 = _board.agents[i].pos + _board.agents[i].delta_pos;
+				Vector2 checkingPos2 = _board.agents[i2].pos + _board.agents[i2].delta_pos;
+				if (checkingPos1 == checkingPos2) {
+					buttingTable[checkingPos1.y * _board.width + checkingPos1.x] = true;
+					_board.agents[i].resetAct();
+					_board.agents[i2].resetAct();
+					_board.agents[i].done_butting = true;
+					_board.agents[i2].done_butting = true;
 					inCheck = true;
 				}
-				if (board.agents[i].getActType() == 2) {
-					if (board.agents[i].getPos() == board.agents[i2].getTarget()) {
-						buttingTable[checkingPos2.y * board.width + checkingPos2.x] = true;
-						board.agents[i2].resetAct();
-						board.agents[i2].setButting(true);
+				if (_board.agents[i].act_type == 2) {
+					if (_board.agents[i].pos == checkingPos2) {
+						buttingTable[checkingPos2.y * _board.width + checkingPos2.x] = true;
+						_board.agents[i2].resetAct();
+						_board.agents[i2].done_butting = true;
 						inCheck = true;
 					}
 				}
-				if (board.agents[i2].getActType() == 2) {
-					if (board.agents[i2].getPos() == board.agents[i].getTarget()) {
-						buttingTable[checkingPos1.y * board.width + checkingPos1.x] = true;
-						board.agents[i].resetAct();
-						board.agents[i].setButting(true);
+				if (_board.agents[i2].act_type == 2) {
+					if (_board.agents[i2].pos == checkingPos1) {
+						buttingTable[checkingPos1.y * _board.width + checkingPos1.x] = true;
+						_board.agents[i].resetAct();
+						_board.agents[i].done_butting = true;
 						inCheck = true;
 					}
 				}
 
-				if (board.agents[i2].getActType() == 1) {
+				if (_board.agents[i2].act_type == 1) {
 
 				}
-				if (board.agents[i].getActType() != 0) {
-					if (buttingTable[checkingPos1.y * board.width + checkingPos1.x]) {
-						board.agents[i].setButting(true);
-						board.agents[i].resetAct();
+				if (_board.agents[i].act_type != 0) {
+					if (buttingTable[checkingPos1.y * _board.width + checkingPos1.x]) {
+						_board.agents[i].done_butting = true;
+						_board.agents[i].resetAct();
 					}
 				}
 
-				if (board.agents[i2].getActType() != 0) {
-					if (buttingTable[checkingPos2.y * board.width + checkingPos2.x]) {
-						board.agents[i2].setButting(true);
-						board.agents[i2].resetAct();
+				if (_board.agents[i2].act_type != 0) {
+					if (buttingTable[checkingPos2.y * _board.width + checkingPos2.x]) {
+						_board.agents[i2].done_butting = true;
+						_board.agents[i2].resetAct();
 					}
 				}
 			}
@@ -323,59 +279,59 @@ bool Game::updateTurn()
 
 	// 停留を選んだエージェントと不正をしたエージェントはバッティングを起こさなかったことにする
 	int i = 0;
-	for (Agent& a : board.agents)
+	for (Agent& a : _board.agents)
 	{
 		if (was_stay[i])
 		{
-			a.setButting(false);
-			a.setBadAct(false);
+			a.done_butting = false;
+			a.done_bad_act = false;
 		}
 
-		if (a.getDoneBadAct())
+		if (a.done_bad_act)
 		{
-			a.setButting(false);
+			a.done_butting = false;
 		}
 		i++;
 	}
 
 	// 実際のデータを更新してリセットする
-	for (Agent& a : board.agents) 
+	for (Agent& a : _board.agents) 
 	{
-		if (a.getActType() == 2) {
-			board.tile_color[a.getTarget().y * board.width + a.getTarget().x] = 0;
+		if (a.act_type == 2) {
+			_board.tile_color[(a.pos + a.delta_pos).y * _board.width + (a.pos + a.delta_pos).x] = 0;
 		} 
 		else {
-			a.setPos(a.getTarget());
+			a.pos = Vector2(a.pos + a.delta_pos);
 		}
-		setTileState(a.getPos(), a.getTeam());
+		_board.tile_color[a.pos.y * _board.width + a.pos.x] = a.team;
 		a.resetAct();
 	}
 
-	board.game_score = countGameScore();
+	_board.game_score = countGameScore(_board);
 
 	// 残りターン数を更新する
-	board.turn--;
+	_board.turn--;
 
 	return false;
 }
 
-int Game::getAreaScore(int team) 
+int Game::getAreaScore(int team, BOARD_STATE& _board) 
 {
 	int area_score = 0;
 	int tmp;
 	bool reach_end;
 	// 探索済みのタイルの配列
-	std::vector<bool> is_searched(board.width * board.height, false);
-	for (int y = 0; y < board.height; y++)
+	std::vector<bool> is_searched(_board.width * _board.height, false);
+	for (int y = 0; y < _board.height; y++)
 	{
-		for (int x = 0; x < board.width; x++)
+		for (int x = 0; x < _board.width; x++)
 		{
 			tmp = 0;
 			reach_end = false;
 
-			if (!is_searched[y * board.width + x])
+			if (!is_searched[y * _board.width + x])
 			{
-				areaScoreRecursion(team, x, y, is_searched, tmp, reach_end);
+				areaScoreRecursion(team, x, y, is_searched, tmp, reach_end, _board);
 			}
 
 			if (!reach_end)
@@ -387,42 +343,42 @@ int Game::getAreaScore(int team)
 	return area_score;
 }
 
-void Game::areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, int& tmp, bool& reach_end)
+void Game::areaScoreRecursion(int team, int x, int y, std::vector<bool>& table, int& tmp, bool& reach_end, BOARD_STATE& _board)
 {
 	// 範囲外判定
-	if (x < 0 || x >= board.width || y < 0 || y >= board.height) { return; }
+	if (x < 0 || x >= _board.width || y < 0 || y >= _board.height) { return; }
 	// 自分のチームのタイルの場合
-	if (board.tile_color[y * board.width + x] == team) { return; }
+	if (_board.tile_color[y * _board.width + x] == team) { return; }
 	// 既に探索済みの場合
-	if (table[y * board.width + x]) { return; }
+	if (table[y * _board.width + x]) { return; }
 	// 筋判定
-	if (x == 0 || x == board.width - 1 || y == 0 || y == board.height - 1) { reach_end = true;}
+	if (x == 0 || x == _board.width - 1 || y == 0 || y == _board.height - 1) { reach_end = true;}
 
-	tmp += abs(board.tile_points[y * board.width + x]);
-	table[y * board.width + x] = true;
+	tmp += abs(_board.tile_points[y * _board.width + x]);
+	table[y * _board.width + x] = true;
 
-	areaScoreRecursion(team, x + 1, y, table, tmp, reach_end);
-	areaScoreRecursion(team, x - 1, y, table, tmp, reach_end);
-	areaScoreRecursion(team, x, y + 1, table, tmp, reach_end);
-	areaScoreRecursion(team, x, y - 1, table, tmp, reach_end);
+	areaScoreRecursion(team, x + 1, y, table, tmp, reach_end, _board);
+	areaScoreRecursion(team, x - 1, y, table, tmp, reach_end, _board);
+	areaScoreRecursion(team, x, y + 1, table, tmp, reach_end, _board);
+	areaScoreRecursion(team, x, y - 1, table, tmp, reach_end, _board);
 }
 
-GAME_SCORE Game::countGameScore()
+GAME_SCORE Game::countGameScore(BOARD_STATE& _board)
 {
 	GAME_SCORE score_tmp = {};
-	for (int y = 0; y < board.height; y++)  {
-		for (int x = 0; x < board.width; x++) {
-			if (board.tile_color[y * board.width + x] == 1) {
-				score_tmp.tile_team1 += board.tile_points[y * board.width + x];
+	for (int y = 0; y < _board.height; y++)  {
+		for (int x = 0; x < _board.width; x++) {
+			if (_board.tile_color[y * _board.width + x] == 1) {
+				score_tmp.tile_team1 += _board.tile_points[y * _board.width + x];
 			}
-			else if (board.tile_color[y * board.width + x] == 2) {
-				score_tmp.tile_team2 += board.tile_points[y * board.width + x];
+			else if (_board.tile_color[y * _board.width + x] == 2) {
+				score_tmp.tile_team2 += _board.tile_points[y * _board.width + x];
 			}
 		}
 	}
 
-	score_tmp.area_team1 = getAreaScore(1);
-	score_tmp.area_team2 = getAreaScore(2);
+	score_tmp.area_team1 = getAreaScore(1, _board);
+	score_tmp.area_team2 = getAreaScore(2, _board);
 
 	return score_tmp;
 }

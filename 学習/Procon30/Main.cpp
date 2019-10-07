@@ -35,7 +35,7 @@ void Main() {
 
 	// 初期化
 	game1.init();
-	renderer1.init(game1.getBoardState());
+	renderer1.init(game1.board);
 	// スレッド開始
 	std::thread gameThread1(game_loop, std::ref(share));
 	std::thread serverThread1(server_loop, std::ref(share), std::ref(server1));
