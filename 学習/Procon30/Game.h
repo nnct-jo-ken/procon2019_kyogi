@@ -56,7 +56,6 @@ public:
 	void load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx);
 
 	static bool updateTurn(BOARD_STATE& _board);				// ターンを移す 試合が終わったらtrueを返す
-	static void setAct(int team, int num, int act, Vector2 delta_pos, BOARD_STATE& _board);
 	static GAME_SCORE countGameScore(BOARD_STATE& _board);	// 得点計算
 
 	static int getAreaScore(int team, BOARD_STATE& _board);

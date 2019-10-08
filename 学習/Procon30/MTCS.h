@@ -27,15 +27,15 @@ public:
 	static constexpr int VISIT_LIMIT = 1;
 	static constexpr int EXPENSION_LIMIT = 100;
 	static constexpr int NODES_LIMIT = 1000000;
-	std::random_device rd;
-	std::mt19937 mt;
+	const double c = std::sqrt(2);
 
+	static double calc_utc(MTCS& mtcs, Node* node);
+	
 	int nodes_count;
 	Node* root_node;
 	int N;
-	const double c = std::sqrt(2);
-
-	static double calc_utc(MTCS& mtcs, Node *node);
+	std::random_device rd;
+	std::mt19937 mt;
 
 	MTCS(BOARD_STATE board, int team);
 	void search(vector<ACT_STATE>& act_list);
@@ -43,9 +43,7 @@ public:
 	void expension_node(Node* node);
 	void action(Node* node, vector<double>& utc_list);
 	void backpropagation(Node* node);
-
 	vector<vector<ACT_STATE>> valid_act(BOARD_STATE& board, int team);
-
+	void clean();
 	void delete_ptr(Node* node);
 };
-

@@ -115,28 +115,6 @@ void Game::parse_json(std::string json_str)
 	}
 }
 
-void Game::setAct(int team, int num, int act, Vector2 step, BOARD_STATE& _board) {
-	if (team != 1 && team != 2) {
-		throw std::invalid_argument("Game::setStep() exception.");
-	}
-
-	if (num < 0 || num <= _board.agents_count) {
-		throw std::invalid_argument("Game::setStep() exception.");
-	}
-
-	if (abs(step.x) > 1 || abs(step.y) > 1) {
-		throw std::invalid_argument("Game::setStep() exception.");
-	}
-
-	if (act != 0 && act != 1) {
-		throw std::invalid_argument("Game::setStep() exception.");
-	}
-
-	Agent& tmp = _board.agents[(team - 1) * _board.agents_count + num];
-	tmp.act_type = act;
-	tmp.delta_pos = tmp.pos + step;
-}
-
 void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)
 {
 	mtx.lock();

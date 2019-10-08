@@ -59,8 +59,6 @@ void MTCS::search(vector<ACT_STATE>& act_list)
 	size_t select_index = std::distance(w_list.begin(), max);
 
 	act_list = root_node->child[select_index]->act_list;
-
-	delete_ptr(root_node);
 }
 
 void MTCS::visit_node(Node* node)
@@ -91,7 +89,7 @@ void MTCS::visit_node(Node* node)
 		vector<double> utc_list;
 		for (Node* c_node : node->child)
 		{
-			utc_list.push_back(MTCS::calc_utc(*this, node));
+			utc_list.push_back(MTCS::calc_utc(*this, c_node));
 		}
 
 		action(node, utc_list);
@@ -111,16 +109,15 @@ void MTCS::backpropagation(Node* node)
 
 void MTCS::expension_node(Node* node)
 {
-	vector<vector<ACT_STATE>>act = valid_act(node->board, node->team);
+	vector<vector<ACT_STATE>> act = valid_act(node->board, node->team);
 	// ランダムで手を選ぶ
 	vector<int> act_list;
 	for (int n = 0; n < EXPENSION_LIMIT * 2; n++) {
 		int act_digit = 0;
 		for (int i = 0; i < node->board.agents_count; i++)
 		{
-			int len = act[i].size();
-			act_digit *= 10;
-			act_digit += mt() % len;
+			act_digit *= 20;
+			act_digit += mt() % act[i].size() + 1;
 		}
 		act_list.push_back(act_digit);
 	}
@@ -135,14 +132,13 @@ void MTCS::expension_node(Node* node)
 		int act_num = act_list[n];
 		for (int i = 0; i < node->board.agents_count; i++)
 		{
-			act[i][act_num % 10];
-			act_num /= 10;
 			int agent_start_i = node->board.agents_count - 1;	// team == 1
 			if (node->team == 1) {
 				agent_start_i = (node->board.agents_count * 2) - 1;	// team == 2
 			}
-			new_node->board.agents[agent_start_i - i].act_type = act[0][i].type; // ここやばい
-			new_node->board.agents[agent_start_i - i].delta_pos= Vector2(act[i][act_num].dx, act[i][act_num].dy); // ここやばい
+			new_node->board.agents[agent_start_i - i].act_type = act[node->board.agents_count - i - 1][act_num % 20 - 1].type; // ここやばい
+			new_node->board.agents[agent_start_i - i].delta_pos= Vector2(act[node->board.agents_count - i - 1][act_num % 20 - 1].dx, act[node->board.agents_count - i - 1][act_num % 20 - 1].dy); // ここやばい
+			act_num /= 10;
 		}
 
 		auto f1 = [&new_node](int i) {
@@ -160,7 +156,7 @@ void MTCS::expension_node(Node* node)
 		}
 		else
 		{
-			for (int i = node->board.agents_count; i < node->board.agents_count * 2; i++)
+			for (int i = 0; i < node->board.agents_count; i++)
 			{
 				f1(i);
 			}
@@ -231,6 +227,11 @@ vector<vector<ACT_STATE>> MTCS::valid_act(BOARD_STATE& board, int team)
 	}
 
 	return act_list;
+}
+
+void MTCS::clean()
+{
+	delete_ptr(root_node);
 }
 
 void MTCS::delete_ptr(Node* node)

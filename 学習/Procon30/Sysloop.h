@@ -4,6 +4,7 @@
 #include "share_obj.h"
 #include "Game.h"
 #include "Server.h"
+#include "MTCS.h"
 
 void game_loop(share_obj& share);
 void server_loop(share_obj& share, Server& server);

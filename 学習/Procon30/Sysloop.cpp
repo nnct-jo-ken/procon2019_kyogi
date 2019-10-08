@@ -30,6 +30,37 @@ void game_loop(share_obj& share)
 
 		if (share.update_turn[0].load() || share.update_turn[1].load())
 		{
+			// MCTS
+			share.mtx.lock();
+			{
+				auto f_search = [share](int i, vector<ACT_STATE>& act_list) {
+					MTCS ai(share.game.board, i);
+					ai.search(act_list);
+					std::cout << ai.nodes_count << std::endl;
+					ai.clean();
+				};
+
+				vector<ACT_STATE> act_list1;
+				vector<ACT_STATE> act_list2;
+
+				/*std::thread mtcs1(f_search, 1, act_list1);
+				std::thread mtcs2(f_search, 2, act_list2);
+				mtcs1.join();
+				mtcs2.join();*/
+
+				f_search(1, act_list1);
+				f_search(2, act_list2);
+
+				for (int i = 0; i < share.game.board.agents_count; i++)
+				{
+					share.game.board.agents[i].act_type = act_list1[i].type;
+					share.game.board.agents[i].delta_pos = Vector2(act_list1[i].dx, act_list1[i].dy);
+					share.game.board.agents[i + share.game.board.agents_count].act_type = act_list2[i].type;
+					share.game.board.agents[i + share.game.board.agents_count].delta_pos = Vector2(act_list2[i].dx, act_list2[i].dy);
+				}
+			}
+			share.mtx.unlock();
+
 			for (int i = 0; i < 2; i++)
 			{
 				share.update_turn[i].store(false, std::memory_order_seq_cst);
