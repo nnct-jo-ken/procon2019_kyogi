@@ -5,16 +5,20 @@
 #include <random>
 #include "Game.h"
 
-using Node = struct mtcs_node;
 using std::unique_ptr;
 using std::vector;
 
-struct mtcs_node {
+class Node {
+public:
 	BOARD_STATE board;
-	unique_ptr<Node> parent;
-	vector<unique_ptr<Node>> child;
+	Node* parent;
+	vector<Node*> child;
+	vector<ACT_STATE> act_list;
 	int n;
-	int w;
+	double w;
+	int team;
+	Node(BOARD_STATE& _board, Node* _parent, int& nodes_count);
+	Node(BOARD_STATE& _board, Node* _parent, int& nodes_count, int team);
 };
 
 class MTCS
@@ -22,28 +26,26 @@ class MTCS
 public:
 	static constexpr int VISIT_LIMIT = 1;
 	static constexpr int EXPENSION_LIMIT = 100;
-	static std::random_device rd;
-	static std::mt19937 mt;
+	static constexpr int NODES_LIMIT = 1000000;
+	std::random_device rd;
+	std::mt19937 mt;
 
-	unique_ptr<Node> root_node;
+	int nodes_count;
+	Node* root_node;
 	int N;
 	const double c = std::sqrt(2);
 
-	MTCS(BOARD_STATE board);
-	void search();
-	void visit_node(mtcs_node& node);
-	void expension_node(mtcs_node& node, int team);
-	void action();
+	static double calc_utc(MTCS& mtcs, Node *node);
+
+	MTCS(BOARD_STATE board, int team);
+	void search(vector<ACT_STATE>& act_list);
+	void visit_node(Node* node);
+	void expension_node(Node* node);
+	void action(Node* node, vector<double>& utc_list);
+	void backpropagation(Node* node);
 
 	vector<vector<ACT_STATE>> valid_act(BOARD_STATE& board, int team);
 
-	int getTileState(int index, const BOARD_STATE& board) { return board.tile_color[index]; }
-	int getTileState(Vector2 pos, const BOARD_STATE& board) { return board.tile_color[pos.y * board.width + pos.x]; }
-	void setTileState(Vector2 pos, int _team, BOARD_STATE& board) {
-		if (_team != 1 && _team != 2) {
-			throw std::invalid_argument("Game::setTileState() exception.");
-		}
-		board.tile_color[pos.y * board.width + pos.x] = _team;
-	}
+	void delete_ptr(Node* node);
 };
 

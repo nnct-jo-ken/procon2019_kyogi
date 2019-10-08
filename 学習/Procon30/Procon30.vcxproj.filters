@@ -76,6 +76,12 @@
     <Filter Include="Source Files\Connection">
       <UniqueIdentifier>{68ab302a-b9b8-4ef2-aa23-4d43998e6e3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\MTCS">
+      <UniqueIdentifier>{f16af3ff-5253-41e1-9c1e-b818baf00fc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MTCS">
+      <UniqueIdentifier>{5b0a82bc-0a40-403b-9be3-1ec8e53bf1c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -116,6 +122,9 @@
     </ClCompile>
     <ClCompile Include="Sysloop.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MTCS.cpp">
+      <Filter>Source Files\MTCS</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -282,6 +291,9 @@
     </ClInclude>
     <ClInclude Include="share_obj.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MTCS.h">
+      <Filter>Header Files\MTCS</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
