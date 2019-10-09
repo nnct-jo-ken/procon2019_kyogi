@@ -26,7 +26,7 @@ class MTCS
 public:
 	static constexpr int VISIT_LIMIT = 1;
 	static constexpr int EXPENSION_LIMIT = 100;
-	static constexpr int NODES_LIMIT = 1000000;
+	static constexpr int NODES_LIMIT = 1000;
 	const double c = std::sqrt(2);
 
 	static double calc_utc(MTCS& mtcs, Node* node);
@@ -39,7 +39,7 @@ public:
 
 	MTCS(BOARD_STATE board, int team);
 	void search(vector<ACT_STATE>& act_list);
-	void visit_node(Node* node);
+	bool visit_node(Node* node);
 	void expension_node(Node* node);
 	void action(Node* node, vector<double>& utc_list);
 	void backpropagation(Node* node);

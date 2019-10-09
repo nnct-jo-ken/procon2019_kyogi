@@ -42,13 +42,13 @@ MTCS::MTCS(BOARD_STATE board, int team)
 	{ root_node = new Node(board, nullptr, nodes_count, 2); }
 	if (team == 2)
 	{ root_node = new Node(board, nullptr, nodes_count, 1); }
-	root_node->n = 1;
+	root_node->n = VISIT_LIMIT;
 }
 
 void MTCS::search(vector<ACT_STATE>& act_list)
 {
 	//　再帰
-	visit_node(root_node);
+	while (!visit_node(root_node));
 	
 	// wが最大の手を返す
 	std::vector<double> w_list;
@@ -61,11 +61,11 @@ void MTCS::search(vector<ACT_STATE>& act_list)
 	act_list = root_node->child[select_index]->act_list;
 }
 
-void MTCS::visit_node(Node* node)
+bool MTCS::visit_node(Node* node)
 {
 	if (nodes_count > NODES_LIMIT)
 	{
-		return;
+		return true;
 	}
 	// 葉に到達した
 	if (node->child.empty())
@@ -78,7 +78,15 @@ void MTCS::visit_node(Node* node)
 		else
 		{		// ロールアウト
 			// この辺でディープ
-			node->w += 1.0;
+			GAME_SCORE scores = node->board.game_score;
+			if (node->team == 1)
+			{
+				node->w += (scores.area_team1 + scores.tile_team1) - (scores.area_team2 + scores.tile_team2);
+			}
+			else
+			{
+				node->w += (scores.area_team2 + scores.tile_team2) - (scores.area_team1 + scores.tile_team1);
+			}
 			// backpropagation
 			backpropagation(node);
 		}
@@ -94,8 +102,10 @@ void MTCS::visit_node(Node* node)
 
 		action(node, utc_list);
 	}
+
 	node->n++;
 	MTCS::N++;
+	return false;
 }
 
 void MTCS::backpropagation(Node* node)
@@ -111,15 +121,14 @@ void MTCS::expension_node(Node* node)
 {
 	vector<vector<ACT_STATE>> act = valid_act(node->board, node->team);
 	// ランダムで手を選ぶ
-	vector<int> act_list;
+	vector<std::string> act_list;
 	for (int n = 0; n < EXPENSION_LIMIT * 2; n++) {
-		int act_digit = 0;
+		std::string act_key(node->board.agents_count, '0');
 		for (int i = 0; i < node->board.agents_count; i++)
 		{
-			act_digit *= 20;
-			act_digit += mt() % act[i].size() + 1;
+			act_key[i] = (char)('a' + mt() % act[i].size());
 		}
-		act_list.push_back(act_digit);
+		act_list.push_back(act_key);
 	}
 	std::sort(act_list.begin(), act_list.end());
 	act_list.erase(std::unique(act_list.begin(), act_list.end()), act_list.end());
@@ -129,16 +138,14 @@ void MTCS::expension_node(Node* node)
 		// 新規ノード作成
 		Node* new_node = new Node(node->board, node, nodes_count);
 
-		int act_num = act_list[n];
 		for (int i = 0; i < node->board.agents_count; i++)
 		{
-			int agent_start_i = node->board.agents_count - 1;	// team == 1
+			int agent_start_i = 0;	// team == 1
 			if (node->team == 1) {
-				agent_start_i = (node->board.agents_count * 2) - 1;	// team == 2
+				agent_start_i = node->board.agents_count;	// team == 2
 			}
-			new_node->board.agents[agent_start_i - i].act_type = act[node->board.agents_count - i - 1][act_num % 20 - 1].type; // ここやばい
-			new_node->board.agents[agent_start_i - i].delta_pos= Vector2(act[node->board.agents_count - i - 1][act_num % 20 - 1].dx, act[node->board.agents_count - i - 1][act_num % 20 - 1].dy); // ここやばい
-			act_num /= 10;
+			new_node->board.agents[agent_start_i + i].act_type = act[i][(int)act_list[n][i] - (int)'a'].type; // ここやばい
+			new_node->board.agents[agent_start_i + i].delta_pos= Vector2(act[i][(int)act_list[n][i] - (int)'a'].dx, act[i][(int)act_list[n][i] - (int)'a'].dy); // ここやばい
 		}
 
 		auto f1 = [&new_node](int i) {
@@ -185,12 +192,8 @@ void MTCS::action(Node* node, vector<double>& utc_list)
 
 vector<vector<ACT_STATE>> MTCS::valid_act(BOARD_STATE& board, int team)
 {
-	int start_i;
-	if (team == 1) 
-	{ start_i = 0; }
-	else 
-	{ start_i = board.agents_count; }
-
+	int start_i = team == 1 ? board.agents_count : 0;
+	
 	vector<vector<ACT_STATE>> act_list;
 	for (int i = start_i; i < start_i + board.agents_count; i++)
 	{
@@ -205,16 +208,16 @@ vector<vector<ACT_STATE>> MTCS::valid_act(BOARD_STATE& board, int team)
 				{ continue; }
 
 				int color = board.tile_color[(pos.y + y) * board.width + (pos.x + x)];	// 移動先のタイルの色
-				if (color == 0 || color == team)	// 移動
+				if (color != team)	// 移動
 				{
 					tmp.push_back(ACT_STATE{ 0, x, y, 1 });
 				}
 				// 除去
-				if (color != 0 && color != team)
+				if (color == team)
 				{
 					tmp.push_back(ACT_STATE{ 0, x, y, 2 });
 				}
-				if (color == team)
+				if (color != 0 && color != team)
 				{
 					if (board.tile_points[(pos.y + y) * board.width + (pos.x + x)] < 0)
 					{

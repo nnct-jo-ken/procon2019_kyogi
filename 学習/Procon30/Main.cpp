@@ -38,6 +38,7 @@ void Main() {
 	renderer1.init(game1.board);
 	// スレッド開始
 	std::thread gameThread1(game_loop, std::ref(share));
+	std::thread solver(solver_loop, std::ref(share));
 	std::thread serverThread1(server_loop, std::ref(share), std::ref(server1));
 	std::thread renderThread1(render_loop, std::ref(share), std::ref(renderer1));
 
