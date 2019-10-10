@@ -6,10 +6,7 @@ void solver_loop(share_obj& share)
 {
 	while (true)
 	{
-		if (share.close_window.load())
-		{
-			return;
-		}
+		
 		if (share.done_update.load()) 
 		{
 			vector<vector<ACT_STATE>> act_list;
@@ -33,8 +30,8 @@ void solver_loop(share_obj& share)
 			}
 
 			share.mtx.unlock();
-			share.update_turn[0].store(true, std::memory_order_seq_cst);
 			share.done_update.store(false, std::memory_order_seq_cst);
+			share.update_turn[0].store(true, std::memory_order_seq_cst);
 		}
 	}
 }
@@ -44,10 +41,7 @@ void game_loop(share_obj& share)
 	while (1)
 	{
 		share.mtx.lock();
-		if (share.game.board.turn <= 0)
-		{
-			share.restart[0].store(true, std::memory_order_seq_cst);
-		}
+		
 		share.mtx.unlock();
 
 		if (share.restart[0].load() || share.restart[1].load())
@@ -93,7 +87,13 @@ void game_loop(share_obj& share)
 
 			// gui
 			share.update_gui.store(true, std::memory_order_seq_cst);
-			share.done_update.store(true, std::memory_order_seq_cst);
+			if (share.game.board.turn <= 0)
+			{
+				share.restart[0].store(true, std::memory_order_seq_cst);
+			}
+			else {
+				share.done_update.store(true, std::memory_order_seq_cst);
+			}
 		}
 
 		share.game.load_queue(share.queue, share.mtx);

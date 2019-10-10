@@ -24,9 +24,9 @@ public:
 class MTCS
 {
 public:
-	static constexpr int VISIT_LIMIT = 3;
-	static constexpr int EXPENSION_LIMIT = 3;
-	static constexpr int NODES_LIMIT = 10;
+	static constexpr int VISIT_LIMIT = 2;
+	static constexpr int EXPENSION_LIMIT = 5;
+	static constexpr int NODES_LIMIT = 1000;
 	const double c = std::sqrt(2);
 
 	static double calc_utc(MTCS& mtcs, Node* node);
