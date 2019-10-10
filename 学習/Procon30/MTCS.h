@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <random>
+#include <algorithm>
 #include "Game.h"
 
 using std::unique_ptr;
@@ -17,16 +18,15 @@ public:
 	int n;
 	double w;
 	int team;
-	Node(BOARD_STATE& _board, Node* _parent, int& nodes_count);
 	Node(BOARD_STATE& _board, Node* _parent, int& nodes_count, int team);
 };
 
 class MTCS
 {
 public:
-	static constexpr int VISIT_LIMIT = 1;
-	static constexpr int EXPENSION_LIMIT = 100;
-	static constexpr int NODES_LIMIT = 1000;
+	static constexpr int VISIT_LIMIT = 3;
+	static constexpr int EXPENSION_LIMIT = 3;
+	static constexpr int NODES_LIMIT = 10;
 	const double c = std::sqrt(2);
 
 	static double calc_utc(MTCS& mtcs, Node* node);

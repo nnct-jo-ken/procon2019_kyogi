@@ -26,8 +26,7 @@ struct BOARD_STATE {
 	int					team_ID;		// 本番では変更する
 	int					width;			// フィールドの横のマス数 10 ～ 20
 	int					height;			// フィールドの縦のマス数 10 ～ 20
-	int					turn;			// 試合の全ターン数
-	int					now_turn;		// 現在のターン数
+	int					turn;			// ターン数
 	int					agents_count;	// 各チームのエージェントの数 2 ～ 8
 	std::vector<int>	tile_points;		// 盤面の得点情報を記憶する配列　サイズは width * height
 	std::vector<int>	tile_color;		// タイルの色 0 or 1 or 2
@@ -52,7 +51,6 @@ public:
 	BOARD_STATE board;
 
 	void init();
-	void clear();
 	void load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx);
 
 	static bool updateTurn(BOARD_STATE& _board);				// ターンを移す 試合が終わったらtrueを返す

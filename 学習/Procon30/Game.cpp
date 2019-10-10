@@ -39,11 +39,6 @@ std::string Game::getJsonFromServer()
 	return std::string(buf);
 }
 
-void Game::clear()
-{
-	board = { 0 };
-}
-
 void Game::parse_json(std::string json_str)
 {
 	std::string err;
@@ -52,7 +47,6 @@ void Game::parse_json(std::string json_str)
 	board.width = json["width"].int_value();
 	board.height = json["height"].int_value();
 	board.turn = json["allTurn"].int_value() - json["turn"].int_value();
-	board.now_turn = json["turn"].int_value();
 
 	// タイルポイント
 	for (auto& col : json["points"].array_items())

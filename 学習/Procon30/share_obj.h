@@ -9,6 +9,7 @@ struct share_obj {
 	std::queue<ACT_STATE>& queue;
 	std::array<std::atomic<bool>, 2>& restart;
 	std::array<std::atomic<bool>, 2>& update_turn;
+	std::atomic<bool>& done_update;
 	std::atomic<bool>& restart_gui;
 	std::atomic<bool>& update_gui;
 	std::atomic<bool>& close_window;

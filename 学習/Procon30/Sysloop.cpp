@@ -4,45 +4,52 @@ int game_count = 1;
 
 void solver_loop(share_obj& share)
 {
-	while (1)
+	while (true)
 	{
-		auto f_search = [share](int i, vector<ACT_STATE>& act_list) {
-			MTCS ai(share.game.board, i);
-			ai.search(act_list);
-			std::cout << ai.nodes_count << std::endl;
-			ai.clean();
-		};
-
-		vector<ACT_STATE> act_list1;
-		vector<ACT_STATE> act_list2;
-
-		/*std::thread mtcs1(f_search, 1, act_list1);
-		std::thread mtcs2(f_search, 2, act_list2);
-		mtcs1.join();
-		mtcs2.join();*/
-
-		f_search(1, act_list1);
-		f_search(2, act_list2);
-
-		share.mtx.lock();
-		for (int i = 0; i < share.game.board.agents_count; i++)
+		if (share.close_window.load())
 		{
-			share.game.board.agents[i].act_type = act_list1[i].type;
-			share.game.board.agents[i].delta_pos = Vector2(act_list1[i].dx, act_list1[i].dy);
-			share.game.board.agents[i + share.game.board.agents_count].act_type = act_list2[i].type;
-			share.game.board.agents[i + share.game.board.agents_count].delta_pos = Vector2(act_list2[i].dx, act_list2[i].dy);
+			return;
 		}
-		share.update_turn[0].store(true, std::memory_order_seq_cst);
-		share.mtx.unlock();
+		if (share.done_update.load()) 
+		{
+			vector<vector<ACT_STATE>> act_list;
+			for (int i = 1; i <= 2; i++)
+			{
+				vector<ACT_STATE> tmp;
+				MTCS ai(share.game.board, i);
+				ai.search(tmp);
+				ai.clean();
+				// std::cout << ai.nodes_count << std::endl;
+				act_list.push_back(tmp);
+			}
 
+			share.mtx.lock();
+			for (int j = 0; j < 2; j++) {
+				for (int i = 0; i < share.game.board.agents_count; i++)
+				{
+					share.game.board.agents[i + j * share.game.board.agents_count].act_type = act_list[j][i].type;
+					share.game.board.agents[i + j * share.game.board.agents_count].delta_pos = Vector2(act_list[j][i].dx, act_list[j][i].dy);
+				}
+			}
+
+			share.mtx.unlock();
+			share.update_turn[0].store(true, std::memory_order_seq_cst);
+			share.done_update.store(false, std::memory_order_seq_cst);
+		}
 	}
-
 }
 
 void game_loop(share_obj& share)
 {
 	while (1)
 	{
+		share.mtx.lock();
+		if (share.game.board.turn <= 0)
+		{
+			share.restart[0].store(true, std::memory_order_seq_cst);
+		}
+		share.mtx.unlock();
+
 		if (share.restart[0].load() || share.restart[1].load())
 		{
 			game_count++;
@@ -55,9 +62,11 @@ void game_loop(share_obj& share)
 				share.restart[i].store(false, std::memory_order_seq_cst);
 			}
 			share.mtx.lock();
-			share.game.clear();
+			share.game = Game();
 			share.game.init();
-			share.mtx.unlock();			
+			share.mtx.unlock();
+
+			share.done_update.store(true, std::memory_order_seq_cst);
 		}
 	
 		if (System::GetPreviousEvent() == WindowEvent::CloseButton)
@@ -73,10 +82,18 @@ void game_loop(share_obj& share)
 			}
 			share.mtx.lock();
 			share.game.updateTurn(share.game.board);
+			for (Agent &a : share.game.board.agents)
+			{
+				if (a.done_bad_act)
+				{
+					std::cout << "team : " << a.team << ", " << "warning : done but action" << std::endl;
+				}
+			}
 			share.mtx.unlock();
 
 			// gui
 			share.update_gui.store(true, std::memory_order_seq_cst);
+			share.done_update.store(true, std::memory_order_seq_cst);
 		}
 
 		share.game.load_queue(share.queue, share.mtx);

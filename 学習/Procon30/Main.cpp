@@ -21,6 +21,7 @@ void Main() {
 	std::atomic<bool> restart_gui(false);
 	std::atomic<bool> update_gui(false);
 	std::atomic<bool> close_window(false);
+	std::atomic<bool> done_update(true);
 
 	share_obj share = {
 		game1,
@@ -28,6 +29,7 @@ void Main() {
 		queue,
 		restart,
 		update_turn,
+		done_update,
 		restart_gui,
 		update_gui,
 		close_window
@@ -43,6 +45,7 @@ void Main() {
 	std::thread renderThread1(render_loop, std::ref(share), std::ref(renderer1));
 
 	gameThread1.join();
+	solver.join();
 	serverThread1.join();
 	renderThread1.join();
 }
