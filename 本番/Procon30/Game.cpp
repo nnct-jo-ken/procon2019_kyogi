@@ -10,7 +10,7 @@ void Game::init()
 
 	// 仮チームID
 	board.team_ID = 1;
-	parse_json(strs);
+	// parse_json(strs);
 
 	board.game_score = countGameScore(board);
 }
@@ -39,41 +39,43 @@ std::string Game::getJsonFromServer()
 	return std::string(buf);
 }
 
-void Game::parse_json(std::string json_str)
+BOARD_STATE Game::parse_json(std::string json_str, int all_turn, int my_team)
 {
 	std::string err;
+	BOARD_STATE result;
 	const json11::Json json = json11::Json::parse(json_str, err);
 	
-	board.width = json["width"].int_value();
-	board.height = json["height"].int_value();
-	board.turn = json["allTurn"].int_value() - json["turn"].int_value();
+	result.width = json["width"].int_value();
+	result.height = json["height"].int_value();
+	result.turn = all_turn - json["turn"].int_value() + 1;
+	result.team_ID = my_team;
 
 	// タイルポイント
 	for (auto& col : json["points"].array_items())
 	{
-		for (int i = 0; i < board.width; i++)
+		for (int i = 0; i < result.width; i++)
 		{
-			board.tile_points.push_back(col[i].int_value());
+			result.tile_points.push_back(col[i].int_value());
 		}
 	}
 
 	// タイルの状態
 	for (auto& col : json["tiled"].array_items())
 	{
-		for (int i = 0; i < board.width; i++)
+		for (int i = 0; i < result.width; i++)
 		{
 			int tile_coler = col[i].int_value();
 			if (tile_coler == 0)
 			{
-				board.tile_color.push_back(tile_coler);
+				result.tile_color.push_back(tile_coler);
 			} 
-			else if (tile_coler == board.team_ID)
+			else if (tile_coler == result.team_ID)
 			{
-				board.tile_color.push_back(1);
+				result.tile_color.push_back(1);
 			}
 			else
 			{
-				board.tile_color.push_back(2);
+				result.tile_color.push_back(2);
 			}
 		}
 	}
@@ -81,32 +83,29 @@ void Game::parse_json(std::string json_str)
 	// エージェント格納
 	for (int i = 0; i < 2; i++)
 	{
-		board.agents_count = 0;
+		result.agents_count = 0;
 		auto team_obj = json["teams"].array_items()[i];
 		for (auto& agent_obj : team_obj["agents"].array_items())
 		{
-			board.agents_count++;
-			board.agents.push_back(
-				Agent(
-					Vector2(
-						agent_obj["x"].int_value() - 1,
-						agent_obj["y"].int_value() - 1
-					),
-					team_obj["teamID"].int_value() == board.team_ID ? 1 : 2,
-					agent_obj["agentID"].int_value()
-				)
+			result.agents_count++;
+			result.agents.push_back(Agent(
+				Vector2(agent_obj["x"].int_value() - 1,
+						agent_obj["y"].int_value() - 1),
+				team_obj["teamID"].int_value() == result.team_ID ? 1 : 2,
+				agent_obj["agentID"].int_value())
 			);
 		}
 	}
 
 	// 自分のチームがコンテナの前半に来るように入れ替え
-	if (board.team_ID != json["teams"].array_items()[0]["teamID"].int_value())
+	if (result.team_ID != json["teams"].array_items()[0]["teamID"].int_value())
 	{
-		for (int i = 0; i < board.agents_count; i++)
+		for (int i = 0; i < result.agents_count; i++)
 		{
-			std::iter_swap(&board.agents[i], &board.agents[i + board.agents_count]);
+			std::iter_swap(&result.agents[i], &result.agents[i + result.agents_count]);
 		}
 	}
+	return result;
 }
 
 void Game::load_queue(std::queue<ACT_STATE>& queue, std::mutex& mtx)

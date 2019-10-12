@@ -44,10 +44,10 @@ struct ACT_STATE {
 
 class Game {
 private:
-	void parse_json(std::string str_json);
 	std::string getJsonFromServer();
 
 public:
+	static BOARD_STATE parse_json(std::string str_json, int all_turn, int my_team);
 	BOARD_STATE board;
 
 	void init();
